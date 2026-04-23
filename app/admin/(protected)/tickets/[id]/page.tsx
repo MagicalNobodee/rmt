@@ -63,6 +63,9 @@ export default async function AdminTicketDetailPage({
         ]
       : []),
   ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const latestUserMessage = [...threadedMessages]
+    .filter((message) => message.sender === "user")
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
   return (
     <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -105,6 +108,15 @@ export default async function AdminTicketDetailPage({
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="rounded-2xl border bg-neutral-50 p-4">
           <div className="text-xs font-semibold text-neutral-600">Conversation</div>
+          {latestUserMessage ? (
+            <div className="mt-3 rounded-2xl border border-amber-300 bg-amber-100 p-4 text-amber-950 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-black uppercase tracking-wide text-amber-800">
+                <span>Latest user reply</span>
+                <span>{formatDateTime(latestUserMessage.created_at)}</span>
+              </div>
+              <div className="mt-2 whitespace-pre-wrap text-sm font-semibold">{latestUserMessage.body}</div>
+            </div>
+          ) : null}
           <div className="mt-3 space-y-3">
             {conversation.map((message) => {
               const isAdmin = message.sender === "admin";

@@ -3,7 +3,12 @@ import Link from "next/link";
 import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
-import { getLatestTicketMessageByTicketId, normalizeTicketStatus, ticketStatusLabel } from "@/lib/ticketWorkflow.mjs";
+import {
+  getLatestTicketMessageByTicketId,
+  getLatestUserTicketMessageByTicketId,
+  normalizeTicketStatus,
+  ticketStatusLabel,
+} from "@/lib/ticketWorkflow.mjs";
 
 export default async function AdminTicketsPage({
   searchParams,
@@ -29,11 +34,12 @@ export default async function AdminTicketsPage({
   const { data: messageRows } = ticketIds.length
     ? await supabase
         .from("support_ticket_messages")
-        .select("ticket_id, sender, created_at")
+        .select("ticket_id, sender, body, created_at")
         .in("ticket_id", ticketIds)
         .order("created_at", { ascending: false })
     : { data: [] };
   const latestMessageByTicketId = getLatestTicketMessageByTicketId(messageRows ?? []);
+  const latestUserMessageByTicketId = getLatestUserTicketMessageByTicketId(messageRows ?? []);
 
   return (
     <div>
@@ -100,6 +106,7 @@ export default async function AdminTicketsPage({
             const category =
               t.category === "Other" && t.category_other ? `Other: ${t.category_other}` : t.category;
             const latestMessage = latestMessageByTicketId.get(t.id);
+            const latestUserMessage = latestUserMessageByTicketId.get(t.id);
             const userReplied = latestMessage?.sender === "user";
             const needsFirstReply = !latestMessage && !t.admin_note && normalizeTicketStatus(t.status) !== "closed";
             const needsAttention = userReplied || needsFirstReply;
@@ -134,6 +141,17 @@ export default async function AdminTicketsPage({
                       <span className="mx-2 text-neutral-300">·</span>
                       Updated {new Date(t.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </div>
+
+                    {latestUserMessage ? (
+                      <div className="mt-3 rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-sm text-amber-950">
+                        <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                          Latest user reply
+                        </div>
+                        <div className="mt-1 line-clamp-2 whitespace-pre-wrap font-semibold">
+                          {latestUserMessage.body}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <Link

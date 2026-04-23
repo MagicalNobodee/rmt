@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   cleanTicketMessage,
   getLatestTicketMessageByTicketId,
+  getLatestUserTicketMessageByTicketId,
   isClosedTicketStatus,
   normalizeTicketStatus,
   ticketStatusLabel,
@@ -49,4 +50,16 @@ test("finds the latest message for each ticket id", () => {
 
   assert.equal(latest.get("t1")?.sender, "admin");
   assert.equal(latest.get("t2")?.sender, "user");
+});
+
+test("finds the latest user message for each ticket id", () => {
+  const latest = getLatestUserTicketMessageByTicketId([
+    { ticket_id: "t1", sender: "user", body: "Older user reply", created_at: "2026-04-24T01:00:00Z" },
+    { ticket_id: "t1", sender: "admin", body: "Latest admin reply", created_at: "2026-04-24T03:00:00Z" },
+    { ticket_id: "t1", sender: "user", body: "Latest user reply", created_at: "2026-04-24T02:00:00Z" },
+    { ticket_id: "t2", sender: "admin", body: "Only admin reply", created_at: "2026-04-24T04:00:00Z" },
+  ]);
+
+  assert.equal(latest.get("t1")?.body, "Latest user reply");
+  assert.equal(latest.has("t2"), false);
 });
