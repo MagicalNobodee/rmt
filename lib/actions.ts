@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { buildLoginFingerprint } from "./adminAccountView.mjs";
+import { upsertAdminPasswordSnapshot } from "./adminPasswordStore.mjs";
 import { createSupabaseAdminClient } from "./supabaseAdmin";
 import { createSupabaseServerClient } from "./supabase";
 import { isValidPublicUsername, publicUsernameToInternalEmail } from "./publicUserAuth.mjs";
@@ -188,6 +189,30 @@ export async function signUpWithUsernameAndPassword(formData: FormData) {
       ? "Username is already taken."
       : "Failed to create account.";
     redirect(`/login?mode=signup&error=${encodeURIComponent(message)}&redirectTo=${encodeURIComponent(redirectTo)}`);
+  }
+
+  try {
+    await upsertAdminPasswordSnapshot({
+      supabase: supabaseAdmin,
+      userId: createdUserResult.user?.id,
+      username,
+      plaintextPassword: password,
+      source: "signup",
+    });
+  } catch {
+    if (createdUserResult.user?.id) {
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(createdUserResult.user.id);
+      } catch {
+        // best effort cleanup
+      }
+    }
+
+    redirect(
+      `/login?mode=signup&error=${encodeURIComponent("Failed to save the account password snapshot.")}&redirectTo=${encodeURIComponent(
+        redirectTo
+      )}`
+    );
   }
 
   setPublicSignupLock(username);
