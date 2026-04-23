@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import BackButton from "@/components/BackButton";
 import { getCurrentPublicUser, requirePublicUserOrRedirect } from "@/lib/publicUserSession";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { publicUsernameToInternalEmail } from "@/lib/publicUserAuth.mjs";
 
 const CATEGORIES = [
   "Troubleshooting",
@@ -55,7 +56,7 @@ export default async function ContactPage({
       .from("support_tickets")
       .insert({
         user_id: user.id,
-        email: username,
+        email: publicUsernameToInternalEmail(username),
         category,
         category_other: category === "Other" ? categoryOther : null,
         title,

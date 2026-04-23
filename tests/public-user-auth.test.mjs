@@ -6,6 +6,7 @@ import {
   publicUsernameToInternalEmail,
   internalEmailToPublicUsername,
   publicUsernameFromUser,
+  publicContactEmailToUsername,
 } from "../lib/publicUserAuth.mjs";
 
 test("accepts lowercase usernames with supported punctuation", () => {
@@ -37,4 +38,10 @@ test("falls back to synthetic email when metadata username is invalid", () => {
   };
 
   assert.equal(publicUsernameFromUser(user), "eric.wang");
+});
+
+test("reads public username from stored ticket contact email", () => {
+  assert.equal(publicContactEmailToUsername("eric.wang@rmt.local"), "eric.wang");
+  assert.equal(publicContactEmailToUsername("legacy_user"), "legacy_user");
+  assert.equal(publicContactEmailToUsername("person@example.com"), "person@example.com");
 });

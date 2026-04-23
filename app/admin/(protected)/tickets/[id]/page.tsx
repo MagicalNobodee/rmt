@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminUpdateTicket } from "@/lib/admin/actions";
+import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -35,7 +36,7 @@ export default async function AdminTicketDetailPage({
           <div className="text-xs font-semibold text-neutral-500">Tickets</div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{t.title}</h1>
           <div className="mt-1 text-sm text-neutral-600">
-            Username: <span className="font-mono">{t.email || "—"}</span>
+            Username: <span className="font-mono">{publicContactEmailToUsername(t.email) || "—"}</span>
             <span className="mx-2 text-neutral-300">·</span>
             {category}
           </div>

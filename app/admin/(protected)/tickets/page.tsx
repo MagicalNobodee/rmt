@@ -1,6 +1,7 @@
 // app/admin/(protected)/tickets/page.tsx
 import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
 
 function statusLabel(s: string) {
   switch (s) {
@@ -108,7 +109,7 @@ export default async function AdminTicketsPage({
                     <div className="text-sm font-extrabold">{t.title}</div>
                     <div className="mt-1 text-xs text-neutral-600">
                       Username:
-                      <span className="ml-1 font-mono">{t.email || "—"}</span>
+                      <span className="ml-1 font-mono">{publicContactEmailToUsername(t.email) || "—"}</span>
                       <span className="mx-2 text-neutral-300">·</span>
                       {category}
                       <span className="mx-2 text-neutral-300">·</span>
