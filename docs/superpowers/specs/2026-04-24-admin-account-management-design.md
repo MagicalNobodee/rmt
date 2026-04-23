@@ -12,6 +12,7 @@ In scope:
 - Turn `/admin/accounts` into a summary list page.
 - Add `/admin/accounts/[id]` as the dedicated detail page.
 - Show concise list fields: username, latest login time, review count.
+- Include both current username-based public accounts and older email-based registered accounts in admin account management.
 - Keep the existing detail information on the new detail page: auth metadata, fingerprint history, posted reviews, and account status.
 - Allow admins to view a stored plaintext password only when the system has a reversible saved copy.
 - Save a reversible password copy for:
@@ -31,12 +32,14 @@ Out of scope:
 `/admin/accounts` becomes a management index instead of a giant detail surface.
 
 The page keeps the current neutral admin styling and search/filter affordances, but each account row only shows:
-- username
+- username or legacy email label
 - latest login time
 - review count
 - link to the detail page
 
 The row should be compact and scannable, with the most important operational signal being "who is this account, when did it last log in, and how active is it".
+
+Legacy email-based accounts that do not map to the `rmt.local` synthetic email format must still appear in the list. For those accounts, the primary label is the real email address, and the detail page should clearly distinguish them from username-based public accounts.
 
 ### Account Detail
 
@@ -160,6 +163,10 @@ The detail page fetches:
 - fingerprint events for the user
 - reviews for the user
 - derived review count
+
+It must support both account shapes:
+- username-based accounts, where the main label is the public username
+- legacy email-based accounts, where the main label is the email address and there may be no public username
 
 ## Error Handling
 
