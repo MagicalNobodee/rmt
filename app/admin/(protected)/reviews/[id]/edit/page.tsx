@@ -1,5 +1,5 @@
 // app/admin/(protected)/reviews/[id]/edit/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import { notFound } from "next/navigation";
 import SubmitButton from "@/components/SubmitButton";
 import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
@@ -48,12 +48,12 @@ export default async function AdminReviewEditPage({
           </div>
         </div>
 
-        <Link
+        <AdminLink
           href="/admin/reviews"
           className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
         >
           ← Back
-        </Link>
+        </AdminLink>
       </div>
 
       {searchParams?.error ? (

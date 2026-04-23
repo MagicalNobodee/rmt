@@ -2,18 +2,19 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import SubmitButton from "@/components/SubmitButton";
 import { requireAdmin } from "@/lib/admin/session";
 import { adminLogout } from "@/lib/admin/actions";
 
 function NavItem({ href, label }: { href: string; label: string }) {
   return (
-    <Link
+    <AdminLink
       href={href}
       className="block rounded-xl px-3 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-100"
     >
       {label}
-    </Link>
+    </AdminLink>
   );
 }
 
@@ -28,9 +29,9 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
         <aside className="w-64 shrink-0">
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <Link href="/admin/teachers" className="rounded bg-black px-2 py-1 text-xs font-black tracking-widest text-white">
+              <AdminLink href="/admin/teachers" className="rounded bg-black px-2 py-1 text-xs font-black tracking-widest text-white">
                 ADMIN
-              </Link>
+              </AdminLink>
               <Link href="/teachers" className="text-xs font-semibold text-neutral-600 hover:underline">
                 View site →
               </Link>

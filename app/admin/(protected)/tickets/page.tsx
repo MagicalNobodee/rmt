@@ -1,5 +1,5 @@
 // app/admin/(protected)/tickets/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import ConfirmDeleteButton from "@/components/ui/ConfirmDeleteButton";
 import SubmitButton from "@/components/SubmitButton";
 import { adminDeleteTicket } from "@/lib/admin/actions";
@@ -153,12 +153,12 @@ export default async function AdminTicketsPage({
                       </ConfirmDeleteButton>
                     </form>
 
-                    <Link
+                    <AdminLink
                       href={`/admin/tickets/${encodeURIComponent(t.id)}`}
                       className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
                     >
                       Open
-                    </Link>
+                    </AdminLink>
                   </div>
                 </div>
               </div>

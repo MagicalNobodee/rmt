@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import AdminLink from "@/components/AdminLink";
 import SubmitButton from "@/components/SubmitButton";
 import { toAdminAccountView } from "@/lib/adminAccountView.mjs";
 import { INTERNAL_AUTH_EMAIL_DOMAIN, publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
@@ -150,12 +150,12 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
             </div>
           </div>
 
-          <Link
+          <AdminLink
             href="/admin/reviews"
             className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
           >
             Review manager
-          </Link>
+          </AdminLink>
         </div>
 
         {authError ? (
@@ -193,9 +193,9 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
               Apply
             </SubmitButton>
             {q ? (
-              <Link href="/admin/accounts" className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-neutral-50">
+              <AdminLink href="/admin/accounts" className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-neutral-50">
                 Clear
-              </Link>
+              </AdminLink>
             ) : null}
           </div>
         </form>
@@ -224,12 +224,12 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
               <div className="text-sm text-neutral-700">{formatDateTime(view.latestLoginAt)}</div>
               <div className="text-sm font-semibold text-neutral-900">{view.reviewCount}</div>
               <div className="flex justify-end">
-                <Link
+                <AdminLink
                   href={`/admin/accounts/${encodeURIComponent(view.id)}`}
                   className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
                 >
                   Manage
-                </Link>
+                </AdminLink>
               </div>
             </div>
           ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function isModifiedClick(event: MouseEvent) {
   return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
@@ -19,6 +19,7 @@ function adminUrlFromHref(href: string) {
 }
 
 export default function AdminRouteTransition() {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locationKey = `${pathname}?${searchParams.toString()}`;
@@ -87,12 +88,14 @@ export default function AdminRouteTransition() {
     previousLocationKey.current = locationKey;
     if (!startedAt.current) return;
 
+    router.refresh();
+
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
 
     const elapsed = Date.now() - startedAt.current;
     const delay = Math.max(450 - elapsed, 150);
     hideTimer.current = window.setTimeout(() => setActive(false), delay);
-  }, [locationKey]);
+  }, [locationKey, router]);
 
   if (!active) return null;
 

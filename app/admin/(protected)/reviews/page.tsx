@@ -1,5 +1,5 @@
 // app/admin/(protected)/reviews/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import SubmitButton from "@/components/SubmitButton";
 import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
@@ -172,12 +172,12 @@ export default async function AdminReviewsPage({
                     </div>
                   </div>
 
-                  <Link
+                  <AdminLink
                     href={`/admin/reviews/${encodeURIComponent(r.id)}/edit`}
                     className="shrink-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
                   >
                     Edit
-                  </Link>
+                  </AdminLink>
                 </div>
               </div>
             );

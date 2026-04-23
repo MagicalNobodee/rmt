@@ -1,5 +1,5 @@
 // app/admin/(protected)/teachers/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminCreateTeacher, adminDeleteTeacher } from "@/lib/admin/actions";
@@ -113,12 +113,12 @@ export default async function AdminTeachersPage({
                   </div>
                 </div>
 
-                <Link
+                <AdminLink
                   href={`/admin/teachers/${encodeURIComponent(t.id)}/edit`}
                   className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
                 >
                   Edit
-                </Link>
+                </AdminLink>
 
                 <form action={adminDeleteTeacher}>
                   <input type="hidden" name="id" value={t.id} />

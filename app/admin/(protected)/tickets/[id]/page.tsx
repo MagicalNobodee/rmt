@@ -1,5 +1,5 @@
 // app/admin/(protected)/tickets/[id]/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import { notFound } from "next/navigation";
 import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
@@ -86,9 +86,9 @@ export default async function AdminTicketDetailPage({
           </div>
         </div>
 
-        <Link href="/admin/tickets" className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50">
+        <AdminLink href="/admin/tickets" className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50">
           ← Back
-        </Link>
+        </AdminLink>
       </div>
 
       {searchParams?.error ? (

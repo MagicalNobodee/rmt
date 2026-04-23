@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import AdminLink from "@/components/AdminLink";
 import SubmitButton from "@/components/SubmitButton";
 import { toAdminAccountView } from "@/lib/adminAccountView.mjs";
 import { getAdminPasswordSnapshotByUserId } from "@/lib/adminPasswordStore.mjs";
@@ -116,12 +116,12 @@ export default async function AdminAccountDetailPage({
             </div>
           </div>
 
-          <Link
+          <AdminLink
             href="/admin/accounts"
             className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
           >
             ← Back to accounts
-          </Link>
+          </AdminLink>
         </div>
 
         {searchParams?.error ? (
@@ -304,12 +304,12 @@ export default async function AdminAccountDetailPage({
                       </div>
                     </div>
 
-                    <Link
+                    <AdminLink
                       href={`/admin/reviews/${encodeURIComponent(review.id)}/edit`}
                       className="shrink-0 rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
                     >
                       Manage
-                    </Link>
+                    </AdminLink>
                   </div>
                 </div>
               );

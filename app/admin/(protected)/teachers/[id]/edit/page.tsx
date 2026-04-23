@@ -1,5 +1,5 @@
 // app/admin/(protected)/teachers/[id]/edit/page.tsx
-import Link from "next/link";
+import AdminLink from "@/components/AdminLink";
 import { notFound } from "next/navigation";
 import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
@@ -46,12 +46,12 @@ export default async function AdminTeacherEditPage({
           <div className="text-xs font-semibold text-neutral-500">Teachers</div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Edit</h1>
         </div>
-        <Link
+        <AdminLink
           href="/admin/teachers"
           className="rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
         >
           ← Back
-        </Link>
+        </AdminLink>
       </div>
 
       {searchParams?.error ? (
