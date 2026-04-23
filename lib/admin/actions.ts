@@ -5,7 +5,6 @@ import crypto from "crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { generateAdminAccountPassword, upsertAdminPasswordSnapshot } from "@/lib/adminPasswordStore.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { cleanTicketMessage, normalizeTicketStatus } from "@/lib/ticketWorkflow.mjs";
 import { clearAdminSession, requireAdmin, safeNextPath, setAdminSession } from "./session";
@@ -207,47 +206,6 @@ export async function adminDeleteReview(formData: FormData) {
   if (teacher_id) revalidatePath(`/teachers/${teacher_id}`);
   revalidatePath("/admin/reviews");
   redirect(`/admin/reviews?message=${encodeURIComponent("Review deleted.")}`);
-}
-
-export async function adminResetAccountPassword(formData: FormData) {
-  requireAdmin("/admin/accounts");
-
-  const userId = str(formData.get("userId"));
-  const accountLabel = str(formData.get("accountLabel"));
-  const detailPath = userId ? `/admin/accounts/${encodeURIComponent(userId)}` : "/admin/accounts";
-
-  if (!userId) redirect(`/admin/accounts?error=${encodeURIComponent("Missing account id.")}`);
-
-  const supabase = createSupabaseAdminClient();
-  const nextPassword = generateAdminAccountPassword();
-
-  const userRes = await supabase.auth.admin.getUserById(userId);
-  if (userRes.error || !userRes.data.user) {
-    redirect(`/admin/accounts?error=${encodeURIComponent(userRes.error?.message ?? "Account not found.")}`);
-  }
-
-  const { error } = await supabase.auth.admin.updateUserById(userId, {
-    password: nextPassword,
-  });
-
-  if (error) redirect(`${detailPath}?error=${encodeURIComponent(error.message)}`);
-
-  try {
-    await upsertAdminPasswordSnapshot({
-      supabase,
-      userId,
-      username: accountLabel || userRes.data.user.email || userId,
-      plaintextPassword: nextPassword,
-      source: "admin_reset",
-    });
-  } catch (snapshotError) {
-    const message = snapshotError instanceof Error ? snapshotError.message : "Failed to save password snapshot.";
-    redirect(`${detailPath}?error=${encodeURIComponent(message)}`);
-  }
-
-  revalidatePath("/admin/accounts");
-  revalidatePath(detailPath);
-  redirect(`${detailPath}?message=${encodeURIComponent("Password reset.")}`);
 }
 
 // --------------------

@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import AdminLink from "@/components/AdminLink";
-import SubmitButton from "@/components/SubmitButton";
 import { toAdminAccountView } from "@/lib/adminAccountView.mjs";
 import { getAdminPasswordSnapshotByUserId } from "@/lib/adminPasswordStore.mjs";
-import { adminResetAccountPassword } from "@/lib/admin/actions";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 type AccountReview = {
@@ -167,17 +165,6 @@ export default async function AdminAccountDetailPage({
           ) : (
             <div className="mt-3 text-sm text-neutral-600">{view.password.label}</div>
           )}
-
-          <form action={adminResetAccountPassword} className="mt-4">
-            <input type="hidden" name="userId" value={view.id} />
-            <input type="hidden" name="accountLabel" value={view.displayLabel} />
-            <SubmitButton
-              pendingText="Resetting..."
-              className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-            >
-              Reset Password
-            </SubmitButton>
-          </form>
         </div>
 
         <div className="rounded-2xl border bg-white p-6 shadow-sm">

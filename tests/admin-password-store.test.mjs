@@ -1,37 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {
-  decryptAdminPasswordSnapshot,
-  encryptAdminPasswordSnapshot,
-  generateAdminAccountPassword,
-} from "../lib/adminPasswordStore.mjs";
+import { toAdminPasswordSnapshotRecord } from "../lib/adminPasswordStore.mjs";
 
-const PRIMARY_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-const SECONDARY_KEY = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+test("builds a plaintext admin password snapshot record for signup", () => {
+  const record = toAdminPasswordSnapshotRecord({
+    userId: "user-1",
+    username: "student.one",
+    plaintextPassword: "Plaintext123!",
+    source: "signup",
+  });
 
-test("encrypts and decrypts admin password snapshots", () => {
-  const encrypted = encryptAdminPasswordSnapshot("Plaintext123!", PRIMARY_KEY);
-
-  assert.equal(typeof encrypted.encrypted_password, "string");
-  assert.equal(typeof encrypted.encryption_iv, "string");
-  assert.equal(typeof encrypted.encryption_tag, "string");
-  assert.equal(
-    decryptAdminPasswordSnapshot(encrypted, PRIMARY_KEY),
-    "Plaintext123!"
-  );
+  assert.equal(record.user_id, "user-1");
+  assert.equal(record.username, "student.one");
+  assert.equal(record.plaintext_password, "Plaintext123!");
+  assert.equal(record.source, "signup");
 });
 
-test("rejects decrypting with the wrong key", () => {
-  const encrypted = encryptAdminPasswordSnapshot("Plaintext123!", PRIMARY_KEY);
+test("does not require encryption metadata for stored admin password snapshots", () => {
+  const record = toAdminPasswordSnapshotRecord({
+    userId: "user-2",
+    username: "",
+    plaintextPassword: "Plaintext123!",
+    source: "signup",
+  });
 
-  assert.throws(() => decryptAdminPasswordSnapshot(encrypted, SECONDARY_KEY));
-});
-
-test("formats generated admin reset passwords with mixed character classes", () => {
-  const password = generateAdminAccountPassword();
-
-  assert.equal(password.length >= 14, true);
-  assert.match(password, /[A-Z]/);
-  assert.match(password, /[a-z]/);
-  assert.match(password, /[0-9]/);
+  assert.equal("encrypted_password" in record, false);
+  assert.equal("encryption_iv" in record, false);
+  assert.equal("encryption_tag" in record, false);
+  assert.equal(record.username, "user-2");
 });

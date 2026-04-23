@@ -46,7 +46,7 @@ test("summarizes public auth account and shows missing plaintext snapshot state"
   assert.equal(view.internalEmail, "student.one@rmt.local");
   assert.equal(view.reviewCount, 2);
   assert.equal(view.password.rawAvailable, false);
-  assert.match(view.password.label, /no stored plaintext password/i);
+  assert.match(view.password.label, /captured during signup/i);
   assert.equal(view.login.latest?.ipAddress, "203.0.113.10");
   assert.equal(view.login.latest?.fingerprintHash, "abc123");
 });
@@ -81,7 +81,7 @@ test("exposes decrypted password details only when a snapshot exists", () => {
     {
       passwordSnapshot: {
         plaintextPassword: "Plaintext123!",
-        source: "admin_reset",
+        source: "signup",
         updated_at: "2026-04-24T05:00:00.000Z",
       },
     }
@@ -89,7 +89,7 @@ test("exposes decrypted password details only when a snapshot exists", () => {
 
   assert.equal(view.password.rawAvailable, true);
   assert.equal(view.password.value, "Plaintext123!");
-  assert.equal(view.password.source, "admin_reset");
+  assert.equal(view.password.source, "signup");
 });
 
 test("accounts index only renders summary fields and links to detail pages", () => {
@@ -108,6 +108,8 @@ test("account detail page exists and renders password plus reviews sections", ()
   assert.match(source, /Password/);
   assert.match(source, /Posted Reviews/);
   assert.match(source, /Login Fingerprint History/);
+  assert.doesNotMatch(source, /Reset Password/);
+  assert.doesNotMatch(source, /adminResetAccountPassword/);
 });
 
 test("builds a stable login fingerprint from request headers", () => {
