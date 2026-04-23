@@ -58,6 +58,28 @@ test("requires a category detail when contact ticket category is Other", () => {
   });
 });
 
+test("explains when contact ticket title is too short", () => {
+  const formData = new FormData();
+  formData.set("category", "Bug Report");
+  formData.set("title", "Hi");
+  formData.set("description", "Please look at this issue.");
+
+  assert.deepEqual(normalizeContactTicketForm(formData), {
+    error: "Title must be at least 3 characters.",
+  });
+});
+
+test("explains when contact ticket description is too short", () => {
+  const formData = new FormData();
+  formData.set("category", "Bug Report");
+  formData.set("title", "Need help");
+  formData.set("description", "Too short");
+
+  assert.deepEqual(normalizeContactTicketForm(formData), {
+    error: "Description must be at least 10 characters.",
+  });
+});
+
 test("omits category detail unless contact ticket category is Other", () => {
   const formData = new FormData();
   formData.set("category", "Bug Report");

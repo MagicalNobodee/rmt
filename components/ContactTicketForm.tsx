@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { CONTACT_TICKET_DESCRIPTION_MIN_LENGTH, CONTACT_TICKET_TITLE_MIN_LENGTH } from "@/lib/contactTicket.mjs";
 
 type ContactTicketFormProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -52,9 +53,13 @@ export default function ContactTicketForm({ action, categories }: ContactTicketF
             <input
               name="title"
               required
+              minLength={CONTACT_TICKET_TITLE_MIN_LENGTH}
               className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
               placeholder="Short summary"
             />
+            <div className="mt-2 text-xs text-neutral-500">
+              At least {CONTACT_TICKET_TITLE_MIN_LENGTH} characters.
+            </div>
           </div>
 
           <div>
@@ -64,11 +69,14 @@ export default function ContactTicketForm({ action, categories }: ContactTicketF
             <textarea
               name="description"
               required
+              minLength={CONTACT_TICKET_DESCRIPTION_MIN_LENGTH}
               rows={7}
               className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
               placeholder="Describe your request in detail..."
             />
-            <div className="mt-2 text-xs text-neutral-500">Max 2000 characters.</div>
+            <div className="mt-2 text-xs text-neutral-500">
+              At least {CONTACT_TICKET_DESCRIPTION_MIN_LENGTH} characters. Max 2000 characters.
+            </div>
           </div>
 
           <button type="submit" className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:opacity-90">
