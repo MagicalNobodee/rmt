@@ -253,6 +253,23 @@ export async function adminResetAccountPassword(formData: FormData) {
 // --------------------
 // Tickets (status + threaded replies)
 // --------------------
+export async function adminDeleteTicket(formData: FormData) {
+  requireAdmin("/admin/tickets");
+
+  const id = str(formData.get("id"));
+  if (!id) redirect(`/admin/tickets?error=${encodeURIComponent("Missing ticket id.")}`);
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from("support_tickets").delete().eq("id", id);
+
+  if (error) redirect(`/admin/tickets?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath("/admin/tickets");
+  revalidatePath(`/admin/tickets/${id}`);
+  revalidatePath("/me/tickets");
+  redirect(`/admin/tickets?message=${encodeURIComponent("Ticket deleted.")}`);
+}
+
 export async function adminUpdateTicket(formData: FormData) {
   requireAdmin("/admin/tickets");
 

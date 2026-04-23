@@ -457,9 +457,9 @@ export async function addMyTicketMessage(formData: FormData) {
   redirect(`${detailPath}?message=${encodeURIComponent("Message sent.")}`);
 }
 
-export async function deleteMyTicket(formData: FormData) {
-  const ticketId = str(formData.get("ticketId"));
-  if (!ticketId) redirect(`/me/tickets?error=${encodeURIComponent("Missing ticket id.")}`);
+export async function deleteMyTicket(ticketId: string) {
+  const id = String(ticketId ?? "").trim();
+  if (!id) return { ok: false, error: "Missing ticket id." };
 
   const { user } = await requirePublicUserOrRedirect("/me/tickets");
   const supabase = createSupabaseAdminClient();
@@ -467,18 +467,18 @@ export async function deleteMyTicket(formData: FormData) {
   const { data: deleted, error } = await supabase
     .from("support_tickets")
     .delete()
-    .eq("id", ticketId)
+    .eq("id", id)
     .eq("user_id", user.id)
     .select("id")
     .maybeSingle();
 
   if (error || !deleted) {
-    redirect(`/me/tickets?error=${encodeURIComponent(error?.message ?? "Delete failed.")}`);
+    return { ok: false, error: error?.message ?? "Delete failed." };
   }
 
   revalidatePath("/me/tickets");
   revalidatePath("/admin/tickets");
-  redirect(`/me/tickets?message=${encodeURIComponent("Ticket deleted.")}`);
+  return { ok: true, message: "Ticket deleted." };
 }
 
 export async function setReviewVote(formData: FormData) {
