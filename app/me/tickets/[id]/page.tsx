@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SubmitButton from "@/components/SubmitButton";
+import { addMyTicketMessage } from "@/lib/actions";
 import { requirePublicUserOrRedirect, publicUsernameToHey } from "@/lib/publicUserSession";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { isClosedTicketStatus, ticketStatusLabel } from "@/lib/ticketWorkflow.mjs";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -14,26 +17,17 @@ function formatDateTime(iso: string) {
   });
 }
 
-function statusLabel(s: string) {
-  switch (s) {
-    case "open":
-      return "Open";
-    case "in_progress":
-      return "In Progress";
-    case "resolved":
-      return "Resolved";
-    case "closed":
-      return "Closed";
-    default:
-      return s || "—";
-  }
-}
-
 function shortId(id: string) {
   return id.length > 10 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
 }
 
-export default async function TicketDetailPage({ params }: { params: { id: string } }) {
+export default async function TicketDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { message?: string; error?: string };
+}) {
   const { user, username } = await requirePublicUserOrRedirect(`/me/tickets/${params.id}`);
   const supabase = createSupabaseAdminClient();
 
@@ -46,8 +40,41 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
 
   if (error || !ticket) notFound();
 
+  const { data: messageRows } = await supabase
+    .from("support_ticket_messages")
+    .select("id, sender, body, created_at")
+    .eq("ticket_id", ticket.id)
+    .order("created_at", { ascending: true });
+
   const category = ticket.category === "Other" && ticket.category_other ? `Other: ${ticket.category_other}` : ticket.category;
   const adminResponse = ticket.admin_note?.trim() || "";
+  const threadedMessages = (messageRows ?? []) as Array<{
+    id: string;
+    sender: string;
+    body: string;
+    created_at: string;
+  }>;
+  const hasThreadedAdminMessage = threadedMessages.some((message) => message.sender === "admin");
+  const conversation = [
+    {
+      id: "initial",
+      sender: "user",
+      body: ticket.description,
+      created_at: ticket.created_at,
+    },
+    ...threadedMessages,
+    ...(adminResponse && !hasThreadedAdminMessage
+      ? [
+          {
+            id: "legacy-admin-note",
+            sender: "admin",
+            body: adminResponse,
+            created_at: ticket.updated_at,
+          },
+        ]
+      : []),
+  ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const isClosed = isClosedTicketStatus(ticket.status);
 
   return (
     <main className="min-h-screen bg-neutral-50">
@@ -94,24 +121,73 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
 
             <div className="shrink-0">
               <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-800">
-                {statusLabel(ticket.status)}
+                {ticketStatusLabel(ticket.status)}
               </span>
             </div>
           </div>
 
+          {searchParams?.error ? (
+            <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+              {searchParams.error}
+            </div>
+          ) : null}
+          {searchParams?.message ? (
+            <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              {searchParams.message}
+            </div>
+          ) : null}
+
           <div className="mt-6">
-            <div className="text-sm font-semibold text-neutral-900">Description</div>
-            <div className="mt-2 whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800">{ticket.description}</div>
+            <div className="text-sm font-semibold text-neutral-900">Conversation</div>
+            <div className="mt-3 space-y-3">
+              {conversation.map((message) => {
+                const isAdmin = message.sender === "admin";
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`rounded-2xl border p-4 ${
+                      isAdmin
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                        : "border-neutral-200 bg-neutral-50 text-neutral-900"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                      <span>{isAdmin ? "Admin" : "You"}</span>
+                      <span className={isAdmin ? "text-emerald-800" : "text-neutral-500"}>
+                        {formatDateTime(message.created_at)}
+                      </span>
+                    </div>
+                    <div className="mt-2 whitespace-pre-wrap text-sm">{message.body}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="mt-6">
-            <div className="text-sm font-semibold text-neutral-900">Admin Response</div>
-            {adminResponse ? (
-              <div className="mt-2 whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-                {adminResponse}
+            <div className="text-sm font-semibold text-neutral-900">Add a message</div>
+            {isClosed ? (
+              <div className="mt-2 rounded-xl border bg-neutral-100 p-4 text-sm text-neutral-600">
+                This ticket is closed. You can no longer add new messages.
               </div>
             ) : (
-              <div className="mt-2 rounded-xl border bg-white p-4 text-sm text-neutral-600">No response yet. Please check back later.</div>
+              <form action={addMyTicketMessage} className="mt-2 space-y-3">
+                <input type="hidden" name="ticketId" value={ticket.id} />
+                <textarea
+                  name="body"
+                  className="h-32 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Write a follow-up message..."
+                  maxLength={2000}
+                  required
+                />
+                <SubmitButton
+                  pendingText="Sending..."
+                  className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Send Message
+                </SubmitButton>
+              </form>
             )}
           </div>
         </div>

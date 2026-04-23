@@ -36,6 +36,7 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
             </div>
 
             <div className="mt-4 space-y-1">
+              <NavItem href="/admin/accounts" label="Accounts" />
               <NavItem href="/admin/teachers" label="Teachers" />
               <NavItem href="/admin/reviews" label="Reviews" />
               <NavItem href="/admin/tickets" label="Tickets" />

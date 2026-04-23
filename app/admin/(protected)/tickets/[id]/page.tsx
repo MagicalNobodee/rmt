@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminUpdateTicket } from "@/lib/admin/actions";
 import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
+import { normalizeTicketStatus, ticketStatusLabel } from "@/lib/ticketWorkflow.mjs";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -27,7 +28,40 @@ export default async function AdminTicketDetailPage({
 
   if (error || !t) notFound();
 
+  const { data: messageRows } = await supabase
+    .from("support_ticket_messages")
+    .select("id, sender, body, created_at")
+    .eq("ticket_id", t.id)
+    .order("created_at", { ascending: true });
+
   const category = t.category === "Other" && t.category_other ? `Other: ${t.category_other}` : t.category;
+  const adminResponse = t.admin_note?.trim() || "";
+  const threadedMessages = (messageRows ?? []) as Array<{
+    id: string;
+    sender: string;
+    body: string;
+    created_at: string;
+  }>;
+  const hasThreadedAdminMessage = threadedMessages.some((message) => message.sender === "admin");
+  const conversation = [
+    {
+      id: "initial",
+      sender: "user",
+      body: t.description,
+      created_at: t.created_at,
+    },
+    ...threadedMessages,
+    ...(adminResponse && !hasThreadedAdminMessage
+      ? [
+          {
+            id: "legacy-admin-note",
+            sender: "admin",
+            body: adminResponse,
+            created_at: t.updated_at,
+          },
+        ]
+      : []),
+  ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
     <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -43,6 +77,11 @@ export default async function AdminTicketDetailPage({
           <div className="mt-1 text-xs text-neutral-500">
             Created: {formatDateTime(t.created_at)} <span className="mx-2 text-neutral-300">·</span>
             Updated: {formatDateTime(t.updated_at)}
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-800">
+              {ticketStatusLabel(t.status)}
+            </span>
           </div>
         </div>
 
@@ -62,10 +101,33 @@ export default async function AdminTicketDetailPage({
         </div>
       ) : null}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="rounded-2xl border bg-neutral-50 p-4">
-          <div className="text-xs font-semibold text-neutral-600">Description</div>
-          <div className="mt-2 whitespace-pre-wrap text-sm text-neutral-900">{t.description}</div>
+          <div className="text-xs font-semibold text-neutral-600">Conversation</div>
+          <div className="mt-3 space-y-3">
+            {conversation.map((message) => {
+              const isAdmin = message.sender === "admin";
+
+              return (
+                <div
+                  key={message.id}
+                  className={`rounded-2xl border p-4 ${
+                    isAdmin
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                      : "border-amber-200 bg-white text-neutral-950"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                    <span>{isAdmin ? "Admin" : "User"}</span>
+                    <span className={isAdmin ? "text-emerald-800" : "text-neutral-500"}>
+                      {formatDateTime(message.created_at)}
+                    </span>
+                  </div>
+                  <div className="mt-2 whitespace-pre-wrap text-sm">{message.body}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="rounded-2xl border bg-neutral-50 p-4">
@@ -88,26 +150,25 @@ export default async function AdminTicketDetailPage({
           <div className="text-xs font-semibold text-neutral-600">Status</div>
           <select
             name="status"
-            defaultValue={t.status}
+            defaultValue={normalizeTicketStatus(t.status) ?? "open"}
             className="mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black"
           >
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>
           </select>
         </div>
 
         <div>
-          <div className="text-xs font-semibold text-neutral-600">Reply (admin_note)</div>
+          <div className="text-xs font-semibold text-neutral-600">New reply</div>
           <textarea
-            name="admin_note"
-            defaultValue={t.admin_note ?? ""}
+            name="body"
             className="mt-1 h-40 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-black"
             placeholder="Write your response to the user..."
+            maxLength={2000}
           />
           <div className="mt-2 text-xs text-neutral-500">
-            This reply is stored in `admin_note` for internal follow-up and future ticket handling.
+            Leave this blank to update status only. Replies are appended to the conversation history.
           </div>
         </div>
 

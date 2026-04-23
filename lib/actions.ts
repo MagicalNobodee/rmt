@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { buildLoginFingerprint } from "./adminAccountView.mjs";
 import { createSupabaseAdminClient } from "./supabaseAdmin";
 import { createSupabaseServerClient } from "./supabase";
 import { isValidPublicUsername, publicUsernameToInternalEmail } from "./publicUserAuth.mjs";
+import { cleanTicketMessage, isClosedTicketStatus } from "./ticketWorkflow.mjs";
 import {
   hasPublicSignupLock,
   requirePublicUserOrRedirect,
@@ -49,6 +52,10 @@ function teacherRatePage(teacherId: string) {
   return `/teachers/${encodeURIComponent(teacherId)}/rate`;
 }
 
+function myTicketPage(ticketId: string) {
+  return `/me/tickets/${encodeURIComponent(ticketId)}`;
+}
+
 function getSubjectOrCourse(formData: FormData): { value: string; source: "subject" | "course" | "none" } {
   const subject = str(formData.get("subject"));
   if (subject) return { value: subject, source: "subject" };
@@ -61,6 +68,25 @@ function getSubjectOrCourse(formData: FormData): { value: string; source: "subje
 
 function validatePassword(password: string) {
   return password.length >= 8;
+}
+
+async function recordPublicUserLoginEvent(userId: string, eventType: "signin" | "signup") {
+  if (!userId) return;
+
+  try {
+    const fingerprint = buildLoginFingerprint(headers(), process.env.ADMIN_COOKIE_SECRET ?? "");
+    const supabaseAdmin = createSupabaseAdminClient();
+    await supabaseAdmin.from("public_user_login_events").insert({
+      user_id: userId,
+      event_type: eventType,
+      ip_address: fingerprint.ipAddress,
+      user_agent: fingerprint.userAgent,
+      accept_language: fingerprint.acceptLanguage,
+      fingerprint_hash: fingerprint.fingerprintHash || null,
+    });
+  } catch {
+    // Login history should never block authentication.
+  }
 }
 
 export async function signInWithUsernameAndPassword(formData: FormData) {
@@ -85,7 +111,7 @@ export async function signInWithUsernameAndPassword(formData: FormData) {
   }
 
   const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: publicUsernameToInternalEmail(username),
     password,
   });
@@ -95,6 +121,8 @@ export async function signInWithUsernameAndPassword(formData: FormData) {
       `/login?error=${encodeURIComponent("Invalid username or password.")}&redirectTo=${encodeURIComponent(redirectTo)}`
     );
   }
+
+  if (data.user?.id) await recordPublicUserLoginEvent(data.user.id, "signin");
 
   redirect(redirectTo);
 }
@@ -145,7 +173,7 @@ export async function signUpWithUsernameAndPassword(formData: FormData) {
 
   const supabaseAdmin = createSupabaseAdminClient();
   const email = publicUsernameToInternalEmail(username);
-  const { error } = await supabaseAdmin.auth.admin.createUser({
+  const { data: createdUserResult, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -163,6 +191,7 @@ export async function signUpWithUsernameAndPassword(formData: FormData) {
   }
 
   setPublicSignupLock(username);
+  if (createdUserResult.user?.id) await recordPublicUserLoginEvent(createdUserResult.user.id, "signup");
 
   const supabase = createSupabaseServerClient();
   const signInResult = await supabase.auth.signInWithPassword({ email, password });
@@ -358,6 +387,73 @@ export async function deleteMyReview(formData: FormData) {
   revalidatePath("/me/ratings");
   revalidatePath(teacherPage(deleted.teacher_id));
   redirect(`/me/ratings?message=${encodeURIComponent("Rating deleted.")}`);
+}
+
+export async function addMyTicketMessage(formData: FormData) {
+  const ticketId = str(formData.get("ticketId"));
+  const detailPath = ticketId ? myTicketPage(ticketId) : "/me/tickets";
+  const body = cleanTicketMessage(formData.get("body"), 2000);
+
+  if (!ticketId) redirect(`/me/tickets?error=${encodeURIComponent("Missing ticket id.")}`);
+  if (!body) redirect(`${detailPath}?error=${encodeURIComponent("Message is required.")}`);
+
+  const { user } = await requirePublicUserOrRedirect(detailPath);
+  const supabase = createSupabaseAdminClient();
+
+  const { data: ticket, error: ticketError } = await supabase
+    .from("support_tickets")
+    .select("id, status")
+    .eq("id", ticketId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (ticketError || !ticket) {
+    redirect(`/me/tickets?error=${encodeURIComponent(ticketError?.message ?? "Ticket not found.")}`);
+  }
+
+  if (isClosedTicketStatus(ticket.status)) {
+    redirect(`${detailPath}?error=${encodeURIComponent("This ticket is closed and cannot receive new messages.")}`);
+  }
+
+  const { error } = await supabase.from("support_ticket_messages").insert({
+    ticket_id: ticketId,
+    sender: "user",
+    body,
+  });
+
+  if (error) redirect(`${detailPath}?error=${encodeURIComponent(error.message)}`);
+
+  await supabase.from("support_tickets").update({ updated_at: new Date().toISOString() }).eq("id", ticketId).eq("user_id", user.id);
+
+  revalidatePath("/me/tickets");
+  revalidatePath(detailPath);
+  revalidatePath("/admin/tickets");
+  revalidatePath(`/admin/tickets/${ticketId}`);
+  redirect(`${detailPath}?message=${encodeURIComponent("Message sent.")}`);
+}
+
+export async function deleteMyTicket(formData: FormData) {
+  const ticketId = str(formData.get("ticketId"));
+  if (!ticketId) redirect(`/me/tickets?error=${encodeURIComponent("Missing ticket id.")}`);
+
+  const { user } = await requirePublicUserOrRedirect("/me/tickets");
+  const supabase = createSupabaseAdminClient();
+
+  const { data: deleted, error } = await supabase
+    .from("support_tickets")
+    .delete()
+    .eq("id", ticketId)
+    .eq("user_id", user.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !deleted) {
+    redirect(`/me/tickets?error=${encodeURIComponent(error?.message ?? "Delete failed.")}`);
+  }
+
+  revalidatePath("/me/tickets");
+  revalidatePath("/admin/tickets");
+  redirect(`/me/tickets?message=${encodeURIComponent("Ticket deleted.")}`);
 }
 
 export async function setReviewVote(formData: FormData) {

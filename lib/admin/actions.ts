@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { cleanTicketMessage, normalizeTicketStatus } from "@/lib/ticketWorkflow.mjs";
 import { clearAdminSession, requireAdmin, safeNextPath, setAdminSession } from "./session";
 
 function str(v: FormDataEntryValue | null | undefined) {
@@ -208,24 +209,50 @@ export async function adminDeleteReview(formData: FormData) {
 }
 
 // --------------------
-// Tickets (status + reply via admin_note)
+// Tickets (status + threaded replies)
 // --------------------
 export async function adminUpdateTicket(formData: FormData) {
   requireAdmin("/admin/tickets");
 
   const id = str(formData.get("id"));
-  const status = str(formData.get("status"));
-  const admin_note = str(formData.get("admin_note")) || null;
+  const status = normalizeTicketStatus(formData.get("status"));
+  const body = cleanTicketMessage(formData.get("body"), 2000);
 
   if (!id) redirect(`/admin/tickets?error=${encodeURIComponent("Missing ticket id.")}`);
-  if (!status) redirect(`/admin/tickets/${encodeURIComponent(id)}?error=${encodeURIComponent("Status is required.")}`);
+  if (!status) {
+    redirect(
+      `/admin/tickets/${encodeURIComponent(id)}?error=${encodeURIComponent(
+        "Status must be open, in progress, or closed."
+      )}`
+    );
+  }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("support_tickets").update({ status, admin_note }).eq("id", id);
+  const ticketUpdate: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+  if (body) ticketUpdate.admin_note = body;
+
+  const { error } = await supabase.from("support_tickets").update(ticketUpdate).eq("id", id);
 
   if (error) redirect(`/admin/tickets/${encodeURIComponent(id)}?error=${encodeURIComponent(error.message)}`);
 
+  if (body) {
+    const { error: messageError } = await supabase.from("support_ticket_messages").insert({
+      ticket_id: id,
+      sender: "admin",
+      body,
+    });
+
+    if (messageError) {
+      redirect(`/admin/tickets/${encodeURIComponent(id)}?error=${encodeURIComponent(messageError.message)}`);
+    }
+  }
+
   revalidatePath("/admin/tickets");
   revalidatePath(`/admin/tickets/${id}`);
+  revalidatePath("/me/tickets");
+  revalidatePath(`/me/tickets/${id}`);
   redirect(`/admin/tickets/${encodeURIComponent(id)}?message=${encodeURIComponent("Updated.")}`);
 }

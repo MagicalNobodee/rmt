@@ -5,3 +5,4 @@ node_modules
 .playwright-cli
 output
 supabase/.temp
+tsconfig.tsbuildinfo
