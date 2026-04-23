@@ -2,27 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import BackButton from "@/components/BackButton";
+import ContactTicketForm from "@/components/ContactTicketForm";
 import { getCurrentPublicUser, requirePublicUserOrRedirect } from "@/lib/publicUserSession";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { publicUsernameToInternalEmail } from "@/lib/publicUserAuth.mjs";
-
-const CATEGORIES = [
-  "Troubleshooting",
-  "Business Partnership",
-  "Technical Partnership",
-  "Account & Login",
-  "Content Report",
-  "Bug Report",
-  "Feature Request",
-  "Data Correction",
-  "Other",
-] as const;
-
-function cleanStr(v: unknown, maxLen: number) {
-  const s = String(v ?? "").trim();
-  if (!s) return "";
-  return s.length > maxLen ? s.slice(0, maxLen) : s;
-}
+import { CONTACT_TICKET_CATEGORIES, normalizeContactTicketForm } from "@/lib/contactTicket.mjs";
 
 function shortId(id: string) {
   return id.length > 10 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id;
@@ -43,24 +27,21 @@ export default async function ContactPage({
     const pageUrl = hdrs.get("referer") ?? "";
     const userAgent = hdrs.get("user-agent") ?? "";
 
-    const category = cleanStr(formData.get("category"), 60) as (typeof CATEGORIES)[number];
-    const categoryOther = cleanStr(formData.get("categoryOther"), 80);
-    const title = cleanStr(formData.get("title"), 120);
-    const description = cleanStr(formData.get("description"), 2000);
-
-    if (!category || !title || !description) {
-      redirect(`/contact?error=${encodeURIComponent("Please fill all required fields.")}`);
+    const normalized = normalizeContactTicketForm(formData);
+    if (normalized.error || !normalized.value) {
+      redirect(`/contact?error=${encodeURIComponent(normalized.error ?? "Please check your input and try again.")}`);
     }
+    const ticket = normalized.value;
 
     const { data, error } = await supabase
       .from("support_tickets")
       .insert({
         user_id: user.id,
         email: publicUsernameToInternalEmail(username),
-        category,
-        category_other: category === "Other" ? categoryOther : null,
-        title,
-        description,
+        category: ticket.category,
+        category_other: ticket.category_other,
+        title: ticket.title,
+        description: ticket.description,
         page_url: pageUrl,
         user_agent: userAgent,
         status: "open",
@@ -69,7 +50,9 @@ export default async function ContactPage({
       .single();
 
     if (error || !data?.id) {
-      redirect(`/contact?error=${encodeURIComponent("Failed to submit. Please try again.")}`);
+      redirect(
+        `/contact?error=${encodeURIComponent(error?.message ?? "Failed to submit. Please try again.")}`
+      );
     }
 
     redirect(`/contact?success=1&ticket=${encodeURIComponent(String(data.id))}`);
@@ -115,7 +98,7 @@ export default async function ContactPage({
 
         {err ? (
           <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-            Submission failed ❌ Please check your input and try again.
+            Submission failed. {err}
           </div>
         ) : null}
 
@@ -141,65 +124,7 @@ export default async function ContactPage({
             </div>
           </div>
         ) : (
-          <form action={createTicket} className="mt-8 space-y-6">
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-              <div className="grid gap-5">
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-900">Category</label>
-                  <select
-                    name="category"
-                    defaultValue="Troubleshooting"
-                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-900">If Other, specify (optional)</label>
-                  <input
-                    name="categoryOther"
-                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                    placeholder="e.g. Teacher name correction"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-900">
-                    Title <span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    name="title"
-                    required
-                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                    placeholder="Short summary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-900">
-                    Description <span className="text-rose-600">*</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    required
-                    rows={7}
-                    className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
-                    placeholder="Describe your request in detail..."
-                  />
-                  <div className="mt-2 text-xs text-neutral-500">Max 2000 characters.</div>
-                </div>
-
-                <button type="submit" className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:opacity-90">
-                  Submit Ticket
-                </button>
-              </div>
-            </div>
-          </form>
+          <ContactTicketForm action={createTicket} categories={CONTACT_TICKET_CATEGORIES} />
         )}
 
         {current ? (

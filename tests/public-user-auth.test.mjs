@@ -8,6 +8,7 @@ import {
   publicUsernameFromUser,
   publicContactEmailToUsername,
 } from "../lib/publicUserAuth.mjs";
+import { normalizeContactTicketForm } from "../lib/contactTicket.mjs";
 
 test("accepts lowercase usernames with supported punctuation", () => {
   assert.equal(isValidPublicUsername("eric"), true);
@@ -44,4 +45,32 @@ test("reads public username from stored ticket contact email", () => {
   assert.equal(publicContactEmailToUsername("eric.wang@rmt.local"), "eric.wang");
   assert.equal(publicContactEmailToUsername("legacy_user"), "legacy_user");
   assert.equal(publicContactEmailToUsername("person@example.com"), "person@example.com");
+});
+
+test("requires a category detail when contact ticket category is Other", () => {
+  const formData = new FormData();
+  formData.set("category", "Other");
+  formData.set("title", "Need help");
+  formData.set("description", "Please look at this issue.");
+
+  assert.deepEqual(normalizeContactTicketForm(formData), {
+    error: "Please specify the Other category.",
+  });
+});
+
+test("omits category detail unless contact ticket category is Other", () => {
+  const formData = new FormData();
+  formData.set("category", "Bug Report");
+  formData.set("categoryOther", "Ignored detail");
+  formData.set("title", "Need help");
+  formData.set("description", "Please look at this issue.");
+
+  assert.deepEqual(normalizeContactTicketForm(formData), {
+    value: {
+      category: "Bug Report",
+      category_other: null,
+      title: "Need help",
+      description: "Please look at this issue.",
+    },
+  });
 });
