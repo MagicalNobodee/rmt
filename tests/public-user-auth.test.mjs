@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   INTERNAL_AUTH_EMAIL_DOMAIN,
   isValidPublicUsername,
@@ -9,6 +10,9 @@ import {
   publicContactEmailToUsername,
 } from "../lib/publicUserAuth.mjs";
 import { normalizeContactTicketForm } from "../lib/contactTicket.mjs";
+
+const contactTicketFormSource = () =>
+  readFileSync(new URL("../components/ContactTicketForm.tsx", import.meta.url), "utf8");
 
 test("accepts lowercase usernames with supported punctuation", () => {
   assert.equal(isValidPublicUsername("eric"), true);
@@ -95,4 +99,14 @@ test("omits category detail unless contact ticket category is Other", () => {
       description: "Please look at this issue.",
     },
   });
+});
+
+test("contact ticket submit button disables and shows pending state while submitting", () => {
+  const source = contactTicketFormSource();
+
+  assert.match(source, /useFormStatus/);
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /aria-busy=\{pending\}/);
+  assert.match(source, /animate-spin/);
+  assert.match(source, /Submitting/);
 });
