@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import Link from "next/link";
+import SubmitButton from "@/components/SubmitButton";
 import { requireAdmin } from "@/lib/admin/session";
 import { adminLogout } from "@/lib/admin/actions";
 
@@ -43,9 +44,12 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
             </div>
 
             <form action={adminLogout} className="mt-4">
-              <button className="w-full rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50">
+              <SubmitButton
+                pendingText="Logging out..."
+                className="w-full rounded-xl border bg-white px-3 py-2 text-sm font-semibold hover:bg-neutral-50"
+              >
                 Logout
-              </button>
+              </SubmitButton>
             </form>
 
             <div className="mt-3 text-xs text-neutral-500">

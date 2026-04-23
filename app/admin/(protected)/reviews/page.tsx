@@ -1,5 +1,6 @@
 // app/admin/(protected)/reviews/page.tsx
 import Link from "next/link";
+import SubmitButton from "@/components/SubmitButton";
 import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
@@ -132,9 +133,12 @@ export default async function AdminReviewsPage({
           </div>
 
           <div className="md:col-span-3">
-            <button className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <SubmitButton
+              pendingText="Applying..."
+              className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
               Apply
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </div>

@@ -1,4 +1,5 @@
 // app/admin/login/page.tsx
+import SubmitButton from "@/components/SubmitButton";
 import { adminLogin } from "@/lib/admin/actions";
 
 export default function AdminLoginPage({
@@ -51,9 +52,12 @@ export default function AdminLoginPage({
               />
             </div>
 
-            <button className="w-full rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <SubmitButton
+              pendingText="Signing in..."
+              className="w-full rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
               Sign in
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>

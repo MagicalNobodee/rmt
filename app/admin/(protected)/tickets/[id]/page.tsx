@@ -1,6 +1,7 @@
 // app/admin/(protected)/tickets/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminUpdateTicket } from "@/lib/admin/actions";
 import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
@@ -172,9 +173,12 @@ export default async function AdminTicketDetailPage({
           </div>
         </div>
 
-        <button className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+        <SubmitButton
+          pendingText="Updating..."
+          className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        >
           Update Ticket
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

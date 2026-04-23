@@ -1,5 +1,6 @@
 // app/admin/(protected)/tickets/page.tsx
 import Link from "next/link";
+import SubmitButton from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { publicContactEmailToUsername } from "@/lib/publicUserAuth.mjs";
 import { getLatestTicketMessageByTicketId, normalizeTicketStatus, ticketStatusLabel } from "@/lib/ticketWorkflow.mjs";
@@ -82,9 +83,12 @@ export default async function AdminTicketsPage({
           </div>
 
           <div className="md:col-span-3">
-            <button className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <SubmitButton
+              pendingText="Applying..."
+              className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
               Apply
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </div>

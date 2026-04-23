@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
+import SubmitButton from "@/components/SubmitButton";
 import { toAdminAccountView } from "@/lib/adminAccountView.mjs";
 import { INTERNAL_AUTH_EMAIL_DOMAIN, publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
@@ -205,9 +206,12 @@ export default async function AdminAccountsPage({ searchParams }: { searchParams
             />
           </div>
           <div className="flex items-end gap-2">
-            <button className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <SubmitButton
+              pendingText="Applying..."
+              className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
               Apply
-            </button>
+            </SubmitButton>
             {q ? (
               <Link href="/admin/accounts" className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-neutral-50">
                 Clear

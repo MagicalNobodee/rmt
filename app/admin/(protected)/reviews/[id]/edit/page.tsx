@@ -1,6 +1,7 @@
 // app/admin/(protected)/reviews/[id]/edit/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SubmitButton from "@/components/SubmitButton";
 import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminDeleteReview, adminUpdateReview } from "@/lib/admin/actions";
@@ -158,18 +159,24 @@ export default async function AdminReviewEditPage({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+          <SubmitButton
+            pendingText="Saving..."
+            className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          >
             Save
-          </button>
-
-          <form action={adminDeleteReview}>
-            <input type="hidden" name="id" value={r.id} />
-            <input type="hidden" name="teacher_id" value={r.teacher_id} />
-            <button className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-900 hover:bg-rose-100">
-              Delete
-            </button>
-          </form>
+          </SubmitButton>
         </div>
+      </form>
+
+      <form action={adminDeleteReview} className="mt-3">
+        <input type="hidden" name="id" value={r.id} />
+        <input type="hidden" name="teacher_id" value={r.teacher_id} />
+        <SubmitButton
+          pendingText="Deleting..."
+          className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-900 hover:bg-rose-100"
+        >
+          Delete
+        </SubmitButton>
       </form>
     </div>
   );
