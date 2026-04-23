@@ -1,13 +1,7 @@
-// app/me/tickets/[id]/page.tsx
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase";
-
-function emailToHey(email?: string | null) {
-  if (!email) return "GUEST";
-  const name = email.split("@")[0] || "USER";
-  return name.replaceAll(".", " ").toUpperCase();
-}
+import { notFound } from "next/navigation";
+import { requirePublicUserOrRedirect, publicUsernameToHey } from "@/lib/publicUserSession";
+import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -40,15 +34,8 @@ function shortId(id: string) {
 }
 
 export default async function TicketDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createSupabaseServerClient();
-
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-  if (!user) {
-    redirect(`/login?redirectTo=${encodeURIComponent(`/me/tickets/${params.id}`)}`);
-  }
-
-  const heyName = emailToHey(user.email);
+  const { user, username } = await requirePublicUserOrRedirect(`/me/tickets/${params.id}`);
+  const supabase = createSupabaseAdminClient();
 
   const { data: ticket, error } = await supabase
     .from("support_tickets")
@@ -59,28 +46,20 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
 
   if (error || !ticket) notFound();
 
-  const category =
-    ticket.category === "Other" && ticket.category_other
-      ? `Other: ${ticket.category_other}`
-      : ticket.category;
-
+  const category = ticket.category === "Other" && ticket.category_other ? `Other: ${ticket.category_other}` : ticket.category;
   const adminResponse = ticket.admin_note?.trim() || "";
 
   return (
     <main className="min-h-screen bg-neutral-50">
       <header className="bg-black text-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-          <Link
-            href="/teachers"
-            className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black"
-            prefetch
-          >
+          <Link href="/teachers" className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black" prefetch>
             RMT
           </Link>
 
           <div className="text-sm font-semibold">Ticket</div>
 
-          <div className="ml-auto text-sm font-extrabold tracking-wide">HEY, {heyName}</div>
+          <div className="ml-auto text-sm font-extrabold tracking-wide">HEY, {publicUsernameToHey(username)}</div>
         </div>
       </header>
 
@@ -110,7 +89,6 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
               </div>
 
               <h1 className="mt-2 text-2xl font-extrabold tracking-tight">{ticket.title}</h1>
-
               <div className="mt-2 text-sm text-neutral-700">{category}</div>
             </div>
 
@@ -123,22 +101,17 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
 
           <div className="mt-6">
             <div className="text-sm font-semibold text-neutral-900">Description</div>
-            <div className="mt-2 whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800">
-              {ticket.description}
-            </div>
+            <div className="mt-2 whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800">{ticket.description}</div>
           </div>
 
           <div className="mt-6">
             <div className="text-sm font-semibold text-neutral-900">Admin Response</div>
-
             {adminResponse ? (
               <div className="mt-2 whitespace-pre-wrap rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
                 {adminResponse}
               </div>
             ) : (
-              <div className="mt-2 rounded-xl border bg-white p-4 text-sm text-neutral-600">
-                No response yet. Please check back later.
-              </div>
+              <div className="mt-2 rounded-xl border bg-white p-4 text-sm text-neutral-600">No response yet. Please check back later.</div>
             )}
           </div>
         </div>

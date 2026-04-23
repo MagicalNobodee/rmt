@@ -101,23 +101,24 @@ export default function PrivacyPolicyPage() {
 
           <h3 className="text-base font-bold">3.1 Information You Provide</h3>
           <p>
-            <span className="font-semibold">3.1.1 User Registration:</span> When you create an account (if offered), we
-            collect information such as your email address (typically an internal school email, e.g.{" "}
-            <span className="font-mono">@basischina.com</span>) and your authentication credentials (handled via our auth
-            provider). We do not ask for sensitive personal identifiers such as government ID numbers.
+            <span className="font-semibold">3.1.1 Account and Submissions:</span> When you create an account, we collect
+            your chosen username and password through our authentication provider. When you submit ratings, tags,
+            comments, or support tickets, we collect the content you provide. We do not ask for sensitive personal
+            identifiers such as government ID numbers.
           </p>
 
           <p>
             <span className="font-semibold">3.1.2 In Connection with Site Features:</span> When you post ratings, tags,
             or comments, we collect the content you submit. The Site is designed so posted ratings are shown to other
-            users without revealing the author’s identity publicly.
+            users without displaying your account name publicly alongside the rating.
           </p>
 
           <h3 className="text-base font-bold">3.2 Information Collected Automatically</h3>
           <p>
             Like most sites, we may collect certain technical information automatically, such as IP address, device and
             browser type, operating system, timestamps, pages viewed, and basic diagnostic logs. We may use cookies or
-            similar technologies to keep you signed in and to support core Site functionality.
+            similar technologies to preserve sign-in state, enforce one account creation per browser, and support core
+            Site functionality.
           </p>
 
           <p>
@@ -129,7 +130,6 @@ export default function PrivacyPolicyPage() {
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">4. How Collected Information Is Used</h2>
           <p>We use Information in a variety of ways, including:</p>
           <ul className="list-disc space-y-2 pl-6">
-            <li>To create and maintain accounts and authenticate users;</li>
             <li>To enable Site features (posting, browsing, sorting, and displaying teacher/course pages);</li>
             <li>To enforce Site Guidelines and keep the community safe;</li>
             <li>To respond to support requests and administer the Site;</li>
@@ -138,12 +138,13 @@ export default function PrivacyPolicyPage() {
 
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">5. Your Choices</h2>
           <p>
-            <span className="font-semibold">Account:</span> You can choose not to create an account; browsing may still
-            be available. Posting content typically requires sign-in.
+            <span className="font-semibold">Posting:</span> You can browse without signing in. If you want to post a
+            rating, vote, comment, or ticket, you need to sign in with an account. Content you submit may be retained
+            for moderation, safety, and support.
           </p>
           <p>
             <span className="font-semibold">Cookies:</span> Most browsers let you control cookies. Disabling cookies may
-            affect login/session functionality.
+            affect sign-in state, the browser-level signup limit, and other core functionality.
           </p>
           <p>
             <span className="font-semibold">Content:</span> If you post a rating/comment, you can usually manage or
@@ -175,22 +176,20 @@ export default function PrivacyPolicyPage() {
           <p className="font-semibold">Public display:</p>
           <p>
             Ratings and comments are user-generated. They may be shown publicly within the Site. The Site is designed so
-            the author identity is not displayed alongside ratings, but moderators may access certain account metadata
+            the author identity is not displayed alongside ratings, but moderators may access limited internal metadata
             for safety, abuse prevention, and enforcement of Site Guidelines.
           </p>
 
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">8. Reviewing, Updating or Deleting Certain Information</h2>
           <p>
-            If you have an account, you may be able to update certain account information. You may also request deletion
-            of your account through available Site tools (if provided) or by contacting us (see Section 13). Some
-            information may be retained for safety, abuse prevention, legal compliance, or to maintain the integrity of
-            the service.
+            You may request deletion of information you submitted by contacting us (see Section 13). Some information
+            may be retained for safety, abuse prevention, legal compliance, or to maintain the integrity of the service.
           </p>
 
           <p>
-            Please note: deleting your account may not necessarily delete all content you posted if retention is
-            required for moderation, safety, or compliance reasons; however, we will handle requests thoughtfully and in
-            line with the Site’s mission and obligations.
+            Please note: deleting a submission may not necessarily remove all related records if retention is required
+            for moderation, safety, or compliance reasons; however, we will handle requests thoughtfully and in line
+            with the Site’s mission and obligations.
           </p>
 
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">9. Protection of Information</h2>
@@ -212,8 +211,8 @@ export default function PrivacyPolicyPage() {
           <p>
             Some jurisdictions provide privacy rights such as access, correction, deletion, and opting out of certain
             processing. Because this Site is a small, school-focused service and collects limited data, some rights may
-            be fulfilled via account tools or by contacting us. We will make reasonable efforts to honor applicable
-            requests consistent with the Site’s purpose, safety, and legal obligations.
+            be fulfilled by contacting us. We will make reasonable efforts to honor applicable requests consistent with
+            the Site’s purpose, safety, and legal obligations.
           </p>
 
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">11. Changes to this Privacy Policy</h2>

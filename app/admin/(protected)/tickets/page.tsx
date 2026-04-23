@@ -43,7 +43,7 @@ export default async function AdminTicketsPage({
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
         <div className="text-xs font-semibold text-neutral-500">Admin</div>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Tickets</h1>
-        <div className="mt-1 text-sm text-neutral-600">View tickets, change status, reply via admin_note.</div>
+        <div className="mt-1 text-sm text-neutral-600">View tickets, change status, and reply via admin_note.</div>
 
         {searchParams?.error ? (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
@@ -63,7 +63,7 @@ export default async function AdminTicketsPage({
 
         <form className="mt-6 grid gap-3 md:grid-cols-3">
           <div className="md:col-span-2">
-            <div className="text-xs font-semibold text-neutral-600">Search (email/title)</div>
+            <div className="text-xs font-semibold text-neutral-600">Search (username/title)</div>
             <input
               name="q"
               defaultValue={q}
@@ -107,7 +107,8 @@ export default async function AdminTicketsPage({
                   <div className="min-w-0">
                     <div className="text-sm font-extrabold">{t.title}</div>
                     <div className="mt-1 text-xs text-neutral-600">
-                      <span className="font-mono">{t.email || "—"}</span>
+                      Username:
+                      <span className="ml-1 font-mono">{t.email || "—"}</span>
                       <span className="mx-2 text-neutral-300">·</span>
                       {category}
                       <span className="mx-2 text-neutral-300">·</span>

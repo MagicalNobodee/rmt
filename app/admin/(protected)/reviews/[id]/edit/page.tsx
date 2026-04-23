@@ -1,6 +1,7 @@
 // app/admin/(protected)/reviews/[id]/edit/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { adminDeleteReview, adminUpdateReview } from "@/lib/admin/actions";
 
@@ -31,7 +32,7 @@ export default async function AdminReviewEditPage({
 
   // 3) 取用户邮箱
   const userRes = await supabase.auth.admin.getUserById(r.user_id);
-  const email = userRes.data.user?.email ?? "—";
+  const reviewer = publicUsernameFromUser(userRes.data.user) || userRes.data.user?.email || "—";
 
   return (
     <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -42,7 +43,7 @@ export default async function AdminReviewEditPage({
           <div className="mt-1 text-sm text-neutral-600">
             Teacher: <span className="font-semibold">{teacher?.full_name || "—"}</span>
             <span className="mx-2 text-neutral-300">·</span>
-            User: <span className="font-mono">{email}</span>
+            Username: <span className="font-mono">{reviewer}</span>
           </div>
         </div>
 

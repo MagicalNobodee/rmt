@@ -1,16 +1,10 @@
-// app/me/ratings/[reviewId]/edit/page.tsx
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import ConfirmDeleteButton from "@/components/ui/ConfirmDeleteButton";
 import StarRating from "@/components/ui/StarRating";
 import { deleteMyReview, updateMyReview } from "@/lib/actions";
-import { createSupabaseServerClient } from "@/lib/supabase";
-import { redirect } from "next/navigation";
-
-function emailToHey(email?: string | null) {
-  if (!email) return "GUEST";
-  const name = email.split("@")[0] || "USER";
-  return name.replaceAll(".", " ").toUpperCase();
-}
+import { requirePublicUserOrRedirect, publicUsernameToHey } from "@/lib/publicUserSession";
+import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 const GRADE_OPTIONS = ["", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "P", "NP"];
 
@@ -21,15 +15,8 @@ export default async function EditMyRatingPage({
   params: { reviewId: string };
   searchParams?: { error?: string };
 }) {
-  const supabase = createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-
-  if (!user) {
-    redirect(`/login?redirectTo=${encodeURIComponent(`/me/ratings/${params.reviewId}/edit`)}`);
-  }
-
-  const heyName = emailToHey(user.email);
+  const { user, username } = await requirePublicUserOrRedirect(`/me/ratings/${params.reviewId}/edit`);
+  const supabase = createSupabaseAdminClient();
 
   const { data: review, error } = await supabase
     .from("reviews")
@@ -51,31 +38,21 @@ export default async function EditMyRatingPage({
     <main className="min-h-screen bg-neutral-50">
       <header className="bg-black text-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-          <Link
-            href="/teachers"
-            className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black"
-            prefetch
-          >
+          <Link href="/teachers" className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black" prefetch>
             RMT
           </Link>
 
-          <Link
-            href="/me/ratings"
-            className="text-sm font-semibold underline underline-offset-2 decoration-white/40"
-            prefetch
-          >
+          <Link href="/me/ratings" className="text-sm font-semibold underline underline-offset-2 decoration-white/40" prefetch>
             My Ratings
           </Link>
 
-          <div className="ml-auto text-sm font-extrabold tracking-wide">HEY, {heyName}</div>
+          <div className="ml-auto text-sm font-extrabold tracking-wide">HEY, {publicUsernameToHey(username)}</div>
         </div>
       </header>
 
       <div className="mx-auto max-w-3xl px-4 py-10">
         {searchParams?.error ? (
-          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
-            {searchParams.error}
-          </div>
+          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">{searchParams.error}</div>
         ) : null}
 
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -85,11 +62,7 @@ export default async function EditMyRatingPage({
             <span className="mx-2 text-neutral-300">·</span>
             {teacherObj?.subject ?? "—"}
             <span className="mx-2 text-neutral-300">·</span>
-            <Link
-              className="underline underline-offset-2"
-              href={`/teachers/${review.teacher_id}`}
-              prefetch
-            >
+            <Link className="underline underline-offset-2" href={`/teachers/${review.teacher_id}`} prefetch>
               View teacher page
             </Link>
           </div>
@@ -189,11 +162,7 @@ export default async function EditMyRatingPage({
                 Save changes
               </button>
 
-              <Link
-                href="/me/ratings"
-                className="rounded-xl border bg-white px-5 py-2.5 text-sm hover:bg-neutral-50"
-                prefetch
-              >
+              <Link href="/me/ratings" className="rounded-xl border bg-white px-5 py-2.5 text-sm hover:bg-neutral-50" prefetch>
                 Cancel
               </Link>
             </div>

@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "next dev",
+    "test": "node --test tests/public-user-auth.test.mjs",
     "build": "next build",
     "start": "next start"
   },

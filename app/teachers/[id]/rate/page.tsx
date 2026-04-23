@@ -1,26 +1,14 @@
 // app/teachers/[id]/rate/page.tsx
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
+import { publicUsernameToHey, requirePublicUserOrRedirect } from "@/lib/publicUserSession";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import RateForm from "@/components/RateForm";
-
-function emailToHey(email?: string | null) {
-  if (!email) return "GUEST";
-  const name = email.split("@")[0] || "USER";
-  return name.replaceAll(".", " ").toUpperCase();
-}
 
 export default async function RatePage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseServerClient();
   const teacherId = params.id;
-
-  // auth gate
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-
-  if (!user) {
-    redirect(`/login?redirectTo=${encodeURIComponent(`/teachers/${teacherId}/rate`)}`);
-  }
+  const current = await requirePublicUserOrRedirect(`/teachers/${teacherId}/rate`);
 
   // load teacher (now includes subjects)
   const { data: teacher, error: tErr } = await supabase
@@ -40,7 +28,7 @@ export default async function RatePage({ params }: { params: { id: string } }) {
         ? [teacher.subject]
         : [];
 
-  const heyName = emailToHey(user.email);
+  const heyName = publicUsernameToHey(current.username);
 
   return (
     <main className="min-h-screen bg-neutral-50">
@@ -57,7 +45,6 @@ export default async function RatePage({ params }: { params: { id: string } }) {
             Back
           </Link>
 
-          {/* 保留原本的 HEY 文案，但放在页面内容里，而不是 header 里 */}
           <div className="ml-auto text-sm font-extrabold tracking-wide text-neutral-800">
             HEY, {heyName}
           </div>

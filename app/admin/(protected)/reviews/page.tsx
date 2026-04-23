@@ -1,5 +1,6 @@
 // app/admin/(protected)/reviews/page.tsx
 import Link from "next/link";
+import { publicUsernameFromUser } from "@/lib/publicUserAuth.mjs";
 import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 type ReviewBase = {
@@ -19,6 +20,12 @@ type TeacherLite = {
   full_name: string | null;
   subject: string | null;
 };
+
+function reviewerLabel(user?: { email?: string | null; user_metadata?: { username?: unknown } } | null) {
+  const username = publicUsernameFromUser(user);
+  if (username) return username;
+  return user?.email ?? "—";
+}
 
 export default async function AdminReviewsPage({
   searchParams,
@@ -71,7 +78,7 @@ export default async function AdminReviewsPage({
   await Promise.all(
     uniqueUserIds.map(async (uid) => {
       const res = await supabase.auth.admin.getUserById(uid);
-      emailMap.set(uid, res.data.user?.email ?? "—");
+      emailMap.set(uid, reviewerLabel(res.data.user));
     })
   );
 
@@ -80,7 +87,7 @@ export default async function AdminReviewsPage({
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
         <div className="text-xs font-semibold text-neutral-500">Admin</div>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Reviews</h1>
-        <div className="mt-1 text-sm text-neutral-600">Moderate / edit / delete reviews. Shows user email.</div>
+        <div className="mt-1 text-sm text-neutral-600">Moderate, edit, or delete reviews. Shows the account username for each rating.</div>
 
         {searchParams?.error ? (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
@@ -149,7 +156,7 @@ export default async function AdminReviewsPage({
                     </div>
 
                     <div className="mt-1 text-xs text-neutral-600">
-                      User: <span className="font-mono">{emailMap.get(r.user_id) ?? "—"}</span>
+                      Username: <span className="font-mono">{emailMap.get(r.user_id) ?? "—"}</span>
                       <span className="mx-2 text-neutral-300">·</span>
                       Q{r.quality} / D{r.difficulty}
                       <span className="mx-2 text-neutral-300">·</span>

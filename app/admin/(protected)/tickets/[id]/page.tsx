@@ -35,7 +35,7 @@ export default async function AdminTicketDetailPage({
           <div className="text-xs font-semibold text-neutral-500">Tickets</div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{t.title}</h1>
           <div className="mt-1 text-sm text-neutral-600">
-            <span className="font-mono">{t.email || "—"}</span>
+            Username: <span className="font-mono">{t.email || "—"}</span>
             <span className="mx-2 text-neutral-300">·</span>
             {category}
           </div>
@@ -106,7 +106,7 @@ export default async function AdminTicketDetailPage({
             placeholder="Write your response to the user..."
           />
           <div className="mt-2 text-xs text-neutral-500">
-            用户在 “My Tickets” 详情页会看到这段回复（你现有前端已读取 admin_note）。
+            This reply is stored in `admin_note` for internal follow-up and future ticket handling.
           </div>
         </div>
 

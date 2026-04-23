@@ -52,8 +52,7 @@ export default function TermsAndConditionsPage() {
             <li>
               <span className="font-semibold">Scope &amp; Eligibility:</span> The Site is intended for students of{" "}
               <span className="font-semibold">Basis International School Park Lane Harbour (BIPH)</span> to research and
-              rate teachers/courses. Account features may require a verified school email (e.g.,{" "}
-              <span className="font-mono">@basischina.com</span>).
+              rate teachers/courses. Posting features require a Site account with a unique username and password.
             </li>
             <li>
               <span className="font-semibold">Rules &amp; Posting:</span> You are responsible for content you submit.
@@ -90,9 +89,9 @@ export default function TermsAndConditionsPage() {
           {/* 2 */}
           <h2 className="pt-2 text-lg font-extrabold tracking-tight">2. Registration</h2>
           <p>
-            Some features require an account. You agree to provide accurate information and to keep your credentials
-            secure. You are responsible for activity under your account. If you believe your account has been accessed
-            without authorization, notify us promptly via “Contact Us.”
+            Some features require you to create and maintain a Site account with a unique username and password. You
+            agree to provide accurate information, keep your credentials secure, and use the Site responsibly. If you
+            believe someone is abusing the Site or impersonating you, notify us promptly via “Contact Us.”
           </p>
 
           {/* 3 */}
@@ -148,9 +147,9 @@ export default function TermsAndConditionsPage() {
             moderation and safety).
           </p>
           <p>
-            <span className="font-semibold">Anonymity:</span> The Site is designed so ratings are presented anonymously
-            to other users. However, we may access account information as needed for security, legal compliance, or
-            moderation.
+            <span className="font-semibold">Public display:</span> The Site is designed so ratings are presented without
+            publicly showing the account username next to the rating. However, we may access limited internal submission
+            metadata as needed for security, legal compliance, or moderation.
           </p>
 
           {/* 7 */}
@@ -209,7 +208,7 @@ export default function TermsAndConditionsPage() {
             <span className="font-semibold">Opt-out (if you choose):</span> If we provide an opt-out option for arbitration
             / class action waiver, you must submit an opt-out notice within 45 days of first accepting these Terms, using
             the Site’s “Contact Us” option and clearly stating you wish to opt out of arbitration and the class action
-            waiver. (We will record your request for that account.)
+            waiver. (We will record your request for our internal records.)
           </p>
           <p>
             <span className="font-semibold">Exceptions:</span> Either party may seek urgent injunctive relief in a court

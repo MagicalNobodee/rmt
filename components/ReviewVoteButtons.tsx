@@ -1,4 +1,3 @@
-// components/ReviewVoteButtons.tsx
 "use client";
 
 import Link from "next/link";
@@ -63,7 +62,7 @@ export default function ReviewVoteButtons({
         disabled={pending}
         onClick={() => submit(nextUpOp)}
         className={[
-          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-neutral-50 disabled:opacity-60",
+          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
           myVote === 1 ? "bg-emerald-50 border-emerald-200" : "",
         ].join(" ")}
         aria-label="Like rating"
@@ -76,7 +75,7 @@ export default function ReviewVoteButtons({
         disabled={pending}
         onClick={() => submit(nextDownOp)}
         className={[
-          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-neutral-50 disabled:opacity-60",
+          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
           myVote === -1 ? "bg-rose-50 border-rose-200" : "",
         ].join(" ")}
         aria-label="Dislike rating"

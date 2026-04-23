@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { signOut } from "@/lib/actions";
+import { signOutPublicUser } from "@/lib/actions";
 
 function safeRedirectTo(path: string, fallback = "/teachers") {
   const v = (path ?? "").trim();
   if (!v) return fallback;
-  // 只允许站内相对路径，防 open-redirect
   if (!v.startsWith("/")) return fallback;
   if (v.startsWith("//")) return fallback;
   if (v.includes("://")) return fallback;
@@ -26,9 +25,7 @@ export default function HeyMenu({
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const btnRef = useRef<HTMLButtonElement | null>(null);
 
-  // ✅ 登录后回到当前页面（不依赖 next/navigation hooks，避免 Suspense/CSR bailout 类问题）
   const loginHref = useMemo(() => {
-    // SSR 时 window 不存在，这里用 fallback
     if (typeof window === "undefined") {
       const rt = encodeURIComponent("/teachers");
       return `/login?mode=signin&redirectTo=${rt}`;
@@ -56,13 +53,11 @@ export default function HeyMenu({
     };
   }, []);
 
-  // ✅ 未登录：显示 Sign in 按钮（替代 HEY, guest）
   if (!isAuthed) {
     return (
       <Link
         href={loginHref}
         className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
-        // 未登录按钮通常不需要预取（减少无意义请求）
         prefetch={false}
       >
         Sign in
@@ -98,7 +93,6 @@ export default function HeyMenu({
           aria-label="User menu"
           className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border bg-white text-black shadow-lg"
         >
-          {/* ✅ 需求：My Ratings 放上面 */}
           <Link
             role="menuitem"
             href="/me/ratings"
@@ -119,14 +113,23 @@ export default function HeyMenu({
             My Tickets
           </Link>
 
+          <Link
+            role="menuitem"
+            href="/contact"
+            className="block px-4 py-3 text-sm hover:bg-neutral-50"
+            onClick={() => setOpen(false)}
+            prefetch
+          >
+            Contact Us
+          </Link>
+
           <div className="h-px bg-neutral-200" />
 
           <form
             action={() => {
-              // ✅ 退出时也顺便把菜单关掉，避免 UI 悬挂
               setOpen(false);
               startTransition(async () => {
-                await signOut();
+                await signOutPublicUser();
               });
             }}
           >

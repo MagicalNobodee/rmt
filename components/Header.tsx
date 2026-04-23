@@ -1,4 +1,3 @@
-// components/Header.tsx
 "use client";
 
 import Link from "next/link";
@@ -46,19 +45,13 @@ export default function Header({
   return (
     <header className="bg-black text-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-        <Link
-          href="/"
-          className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black"
-          prefetch
-        >
+        <Link href="/" className="rounded bg-white px-2 py-1 text-xs font-black tracking-widest text-black" prefetch>
           RMT
         </Link>
 
         {showSearch ? (
           <div className="hidden items-center gap-3 md:flex">
-            <div className="text-sm font-semibold">
-              {active === "my_ratings" ? "My Ratings" : "Teachers"}
-            </div>
+            <div className="text-sm font-semibold">{active === "my_ratings" ? "My Ratings" : "Teachers"}</div>
 
             {active !== "my_ratings" ? (
               <>
@@ -79,20 +72,14 @@ export default function Header({
 
                 <div className="text-sm text-white/70">at</div>
 
-                <Link
-                  href="/teachers"
-                  className="text-sm font-semibold underline underline-offset-2 decoration-white/40"
-                  prefetch
-                >
+                <Link href="/teachers" className="text-sm font-semibold underline underline-offset-2 decoration-white/40" prefetch>
                   BIPH
                 </Link>
               </>
             ) : null}
           </div>
         ) : (
-          <div className="text-sm font-semibold">
-            {active === "my_ratings" ? "My Ratings" : "Teachers"}
-          </div>
+          <div className="text-sm font-semibold">{active === "my_ratings" ? "My Ratings" : "Teachers"}</div>
         )}
 
         <div className="ml-auto">

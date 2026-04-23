@@ -1,6 +1,7 @@
 // app/teachers/[id]/page.tsx
 import Header from "@/components/Header";
 import ReviewVoteButtons from "@/components/ReviewVoteButtons";
+import { getCurrentPublicUser, publicUsernameToHey } from "@/lib/publicUserSession";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -40,12 +41,6 @@ type PageProps = {
   searchParams?: { course?: string; error?: string };
 };
 
-function emailToHey(email?: string | null) {
-  if (!email) return "GUEST";
-  const name = email.split("@")[0] || "USER";
-  return name.replaceAll(".", " ").toUpperCase();
-}
-
 type TeacherRow = {
   id: string;
   full_name: string | null;
@@ -81,13 +76,11 @@ type ReviewRow = {
 export default async function TeacherPage({ params, searchParams }: PageProps) {
   const supabase = createSupabaseServerClient();
   const teacherId = params.id;
+  const current = await getCurrentPublicUser();
+  const isAuthed = !!current;
+  const heyName = publicUsernameToHey(current?.username);
 
   const selectedCourse = (searchParams?.course ?? "").trim();
-
-  // Auth (independent)
-  const { data: userData } = await supabase.auth.getUser();
-  const isAuthed = !!userData.user;
-  const heyName = emailToHey(userData.user?.email);
 
   // 1) Fetch teacher first (needed for maxReviewsToFetch)
   const { data: teacher, error: teacherErr } = await supabase
@@ -167,7 +160,7 @@ export default async function TeacherPage({ params, searchParams }: PageProps) {
       : Promise.resolve({ data: [] as any[] }),
 
     isAuthed && reviewIds.length > 0
-      ? supabase.from("review_votes").select("review_id,vote").in("review_id", reviewIds).eq("user_id", userData.user!.id)
+      ? supabase.from("review_votes").select("review_id,vote").in("review_id", reviewIds).eq("user_id", current.user.id)
       : Promise.resolve({ data: [] as any[] }),
   ]);
 

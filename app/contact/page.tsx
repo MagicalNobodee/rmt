@@ -1,9 +1,9 @@
-// app/contact/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { createSupabaseServerClient } from "@/lib/supabase";
 import BackButton from "@/components/BackButton";
+import { getCurrentPublicUser, requirePublicUserOrRedirect } from "@/lib/publicUserSession";
+import { createSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 const CATEGORIES = [
   "Troubleshooting",
@@ -35,13 +35,8 @@ export default async function ContactPage({
   async function createTicket(formData: FormData) {
     "use server";
 
-    const supabase = createSupabaseServerClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-
-    if (!user) {
-      redirect(`/login?redirectTo=${encodeURIComponent("/contact")}`);
-    }
+    const { user, username } = await requirePublicUserOrRedirect("/contact");
+    const supabase = createSupabaseAdminClient();
 
     const hdrs = headers();
     const pageUrl = hdrs.get("referer") ?? "";
@@ -60,7 +55,7 @@ export default async function ContactPage({
       .from("support_tickets")
       .insert({
         user_id: user.id,
-        email: user.email ?? null,
+        email: username,
         category,
         category_other: category === "Other" ? categoryOther : null,
         title,
@@ -79,13 +74,7 @@ export default async function ContactPage({
     redirect(`/contact?success=1&ticket=${encodeURIComponent(String(data.id))}`);
   }
 
-  const supabase = createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (!userData.user) {
-    redirect(`/login?redirectTo=${encodeURIComponent("/contact")}`);
-  }
-
+  const current = await getCurrentPublicUser();
   const ok = searchParams?.success === "1";
   const err = searchParams?.error ?? "";
   const ticketId = searchParams?.ticket ?? "";
@@ -101,13 +90,12 @@ export default async function ContactPage({
             <span aria-hidden>←</span>
             Back
           </BackButton>
-        
+
           <div className="text-xs text-neutral-500">Rate My Teacher · BIPH</div>
         </div>
 
-
         <h1 className="text-3xl font-extrabold tracking-tight">Contact Us</h1>
-        <p className="mt-2 text-sm text-neutral-700">Submit a ticket for help, partnerships, or suggestions. </p>
+        <p className="mt-2 text-sm text-neutral-700">Submit a ticket for help, partnerships, or suggestions.</p>
 
         {ok ? (
           <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
@@ -130,74 +118,94 @@ export default async function ContactPage({
           </div>
         ) : null}
 
-        <form action={createTicket} className="mt-8 space-y-6">
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-            <div className="grid gap-5">
-              <div>
-                <label className="block text-sm font-semibold text-neutral-900">Category</label>
-                <select
-                  name="category"
-                  defaultValue="Troubleshooting"
-                  className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-neutral-900">
-                  If Other, specify (optional)
-                </label>
-                <input
-                  name="categoryOther"
-                  className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                  placeholder="e.g. Teacher name correction"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-neutral-900">
-                  Title <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  name="title"
-                  required
-                  className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
-                  placeholder="Short summary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-neutral-900">
-                  Description <span className="text-rose-600">*</span>
-                </label>
-                <textarea
-                  name="description"
-                  required
-                  rows={7}
-                  className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
-                  placeholder="Describe your request in detail..."
-                />
-                <div className="mt-2 text-xs text-neutral-500">Max 2000 characters.</div>
-              </div>
-
-              <button
-                type="submit"
+        {!current ? (
+          <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm ring-1 ring-neutral-200">
+            <div className="text-lg font-semibold text-neutral-900">Sign in required</div>
+            <p className="mt-2 text-sm text-neutral-700">You can browse the site without an account, but submitting a ticket requires signing in.</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href={`/login?mode=signin&redirectTo=${encodeURIComponent("/contact")}`}
                 className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:opacity-90"
+                prefetch
               >
-                Submit Ticket
-              </button>
+                Sign in
+              </Link>
+              <Link
+                href={`/login?mode=signup&redirectTo=${encodeURIComponent("/contact")}`}
+                className="rounded-xl border bg-white px-5 py-3 text-sm font-semibold hover:bg-neutral-50"
+                prefetch
+              >
+                Create account
+              </Link>
             </div>
           </div>
-        </form>
+        ) : (
+          <form action={createTicket} className="mt-8 space-y-6">
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
+              <div className="grid gap-5">
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900">Category</label>
+                  <select
+                    name="category"
+                    defaultValue="Troubleshooting"
+                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-        <div className="mt-6 text-xs text-neutral-500">
-          Tip: You can track ticket status on <Link className="underline" href="/me/tickets">My Tickets</Link>.
-        </div>
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900">If Other, specify (optional)</label>
+                  <input
+                    name="categoryOther"
+                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
+                    placeholder="e.g. Teacher name correction"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900">
+                    Title <span className="text-rose-600">*</span>
+                  </label>
+                  <input
+                    name="title"
+                    required
+                    className="mt-2 h-11 w-full rounded-xl border border-neutral-200 bg-white px-4 text-sm outline-none focus:border-neutral-400"
+                    placeholder="Short summary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900">
+                    Description <span className="text-rose-600">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    required
+                    rows={7}
+                    className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
+                    placeholder="Describe your request in detail..."
+                  />
+                  <div className="mt-2 text-xs text-neutral-500">Max 2000 characters.</div>
+                </div>
+
+                <button type="submit" className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:opacity-90">
+                  Submit Ticket
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {current ? (
+          <div className="mt-6 text-xs text-neutral-500">
+            Tip: You can track ticket status on <Link className="underline" href="/me/tickets">My Tickets</Link>.
+          </div>
+        ) : null}
       </div>
     </main>
   );

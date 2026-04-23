@@ -30,12 +30,13 @@ export default function HomePage() {
               </div>
             </div>
       
-            <h1 className="mt-10 text-3xl font-semibold tracking-tight md:text-4xl">
-              Find a teacher at{" "}
-              <span className="underline decoration-white/50 underline-offset-4">
-                Basis Int. School Park Lane Harbor
-              </span>
+            <h1 className="mt-10 max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
+              Anonymous reviews for <span className="underline decoration-white/50 underline-offset-4">BIPH teachers</span>
             </h1>
+
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-white/80 md:text-base">
+              Read real classroom experiences, rate teachers, and leave comments without showing your username publicly.
+            </p>
       
             <div className="mt-10 w-full max-w-2xl">
               <Link
@@ -47,7 +48,7 @@ export default function HomePage() {
                 <span className="ml-2 opacity-70 group-hover:opacity-100">→</span>
       
                 <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-white/80">
-                  Click to view teachers and ratings (sign in to post)
+                  Browse BIPH teachers freely, then sign in to post anonymous ratings
                 </span>
               </Link>
             </div>
@@ -68,24 +69,6 @@ export default function HomePage() {
               </svg>
             </a>
           </div>
-      
-          {/* BOTTOM: yellow callout (now it sits BELOW, not covering anything) */}
-          <div className="pb-10">
-            <div className="mx-auto max-w-3xl rounded-2xl bg-yellow-300/95 p-6 text-left text-black shadow-xl ring-1 ring-yellow-200 backdrop-blur">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-2 w-2 rounded-full bg-black/80" />
-                <div className="text-xs font-extrabold tracking-[0.22em] uppercase">We need you!</div>
-              </div>
-      
-              <div className="mt-3 text-lg font-extrabold tracking-tight">Help us shape this new site.</div>
-      
-              <p className="mt-2 text-sm leading-6 text-black/80">
-                We’re BIPH students who built and operate this website. It just launched, and we’d love your help—whether
-                you’d like to contribute to the project or simply share suggestions. Please scroll to the bottom of this page
-                (page footer) and click <span className="font-semibold underline underline-offset-2">Contact Us</span>.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -97,8 +80,8 @@ export default function HomePage() {
           <h2 className="text-2xl font-extrabold tracking-tight">Welcome back!</h2>
           <p className="mt-3 text-sm leading-6 text-neutral-700">
             <span className="font-semibold">Rate My Teacher</span> is a school-only rating site built specifically for{" "}
-            <span className="font-semibold">BIPH</span>. Browse teacher pages freely, and sign in with your{" "}
-            <span className="font-mono">@basischina.com</span> email to post ratings and tags.{" "}
+            <span className="font-semibold">BIPH</span>. Browse teacher pages freely, then create an account to post
+            anonymous ratings, comment on teachers, vote on reviews, and help students understand classes before they choose.
           </p>
         </div>
 
@@ -119,7 +102,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 text-3xl font-extrabold tracking-tight">Manage and edit your ratings</div>
+            <div className="mt-6 text-3xl font-extrabold tracking-tight">Post ratings in seconds</div>
           </div>
 
           {/* 2 */}
@@ -131,7 +114,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6 text-3xl font-extrabold tracking-tight">Your ratings are always anonymous</div>
+            <div className="mt-6 text-3xl font-extrabold tracking-tight">One account, one rating per teacher</div>
           </div>
 
           {/* 3 */}

@@ -1,16 +1,15 @@
 "use client";
 
-// app/login/page.tsx
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPassword, signUpWithEmailAndPassword } from "@/lib/actions";
+import { signInWithUsernameAndPassword, signUpWithUsernameAndPassword } from "@/lib/actions";
 
 type LoginPageProps = {
   searchParams?: {
     message?: string;
     error?: string;
     redirectTo?: string;
-    mode?: string; // "signin" | "signup"
+    mode?: string;
   };
 };
 
@@ -25,12 +24,6 @@ function Alert({ kind, text }: { kind: "error" | "message"; text: string }) {
   return <div className={cls}>{text}</div>;
 }
 
-/**
- * ✅ 防 open-redirect：只允许站内相对路径
- * - 必须以 "/" 开头
- * - 不能以 "//" 开头（协议相对）
- * - 不能包含 "://"
- */
 function sanitizeRedirectTo(value: string | undefined, fallback = "/teachers") {
   const v = (value ?? "").trim();
   if (!v) return fallback;
@@ -46,26 +39,17 @@ function pickMode(searchParams?: LoginPageProps["searchParams"]): Mode {
   if (modeRaw === "signin" || modeRaw === "login") return "signin";
 
   const error = (searchParams?.error ?? "").toLowerCase();
-  // 这些错误更像是注册流程产生的
-  if (error.includes("do not match") || error.includes("match") || error.includes("at least 8")) return "signup";
+  if (error.includes("match") || error.includes("taken") || error.includes("created")) return "signup";
 
   return "signin";
 }
 
-/**
- * 表单提交“立即响应”的关键：给用户一个 pending UI。
- * 我们不用 useFormStatus（它需要拆出 Client Component），
- * 直接用 onSubmit + 本地 pending 状态，保证单文件可用。
- */
 function useSubmitPending() {
   const [pending, setPending] = React.useState(false);
 
   const onSubmit = React.useCallback((e: React.FormEvent<HTMLFormElement>) => {
     const form = e.currentTarget;
-
-    // 若浏览器校验不通过，不进入 pending（避免“点了没提交却一直转”）
     if (!form.checkValidity()) {
-      // 触发浏览器提示
       form.reportValidity?.();
       setPending(false);
       return;
@@ -73,22 +57,17 @@ function useSubmitPending() {
     setPending(true);
   }, []);
 
-  // 如果 server action 返回到同一页并展示 error/message，页面会重新渲染，pending 会自然重置（刷新组件状态）
-  return { pending, onSubmit, setPending };
+  return { pending, onSubmit };
 }
 
 export default function LoginPage({ searchParams }: LoginPageProps) {
   const router = useRouter();
-
   const message = searchParams?.message;
   const error = searchParams?.error;
-
   const redirectTo = sanitizeRedirectTo(searchParams?.redirectTo, "/teachers");
-
   const initialMode = pickMode(searchParams);
   const [mode, setMode] = React.useState<Mode>(initialMode);
 
-  // ✅ tab 切换：立刻切换 UI，同时仅用 replace 同步 URL（不触发整页跳转等待）
   const setModeAndSyncUrl = React.useCallback(
     (nextMode: Mode) => {
       setMode(nextMode);
@@ -108,10 +87,8 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
           <div className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight">Rate My Teacher</h1>
             <p className="mt-2 text-sm text-neutral-600">BASIS International School Park Lane Harbor (High School)</p>
-            <p className="mt-3 text-sm text-neutral-700">Viewing is public. Posting reviews requires sign in.</p>
-            <p className="mt-1 text-sm font-medium text-neutral-800">
-              Only internal email addresses (<span className="font-mono">@basischina.com</span>) are allowed.
-            </p>
+            <p className="mt-3 text-sm text-neutral-700">Browsing is public. Posting reviews, voting, and tickets requires sign in.</p>
+            <p className="mt-1 text-sm font-medium text-neutral-800">Usernames use lowercase letters, numbers, `.`, `_`, and `-` only.</p>
           </div>
 
           <div className="mb-6 space-y-3">
@@ -120,7 +97,6 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
           </div>
 
           <div className="mx-auto w-full max-w-xl rounded-2xl border bg-white p-6 shadow-sm">
-            {/* Tabs (no Link navigation; instant) */}
             <div className="mb-6">
               <div className="inline-flex w-full rounded-full bg-neutral-100 p-1">
                 <button
@@ -150,26 +126,25 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 
               <p className="mt-3 text-sm text-neutral-600">
                 {mode === "signin"
-                  ? "Use your internal school email to sign in and post reviews."
-                  : "Registration is open to internal emails only. We’ll send a verification email."}
+                  ? "Sign in with your username and password to post and manage your content."
+                  : "Each browser can create one account. After that, use sign in on this device."}
               </p>
             </div>
 
-            {/* Content */}
             {mode === "signin" ? (
               <section>
-                <form action={signInWithPassword} onSubmit={signin.onSubmit} className="space-y-4">
-                  {/* ✅ redirect after sign-in */}
+                <form action={signInWithUsernameAndPassword} onSubmit={signin.onSubmit} className="space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
                   <label className="block">
-                    <span className="text-sm font-medium">Email</span>
+                    <span className="text-sm font-medium">Username</span>
                     <input
-                      name="email"
-                      type="email"
-                      placeholder="name@basischina.com"
-                      autoComplete="email"
-                      inputMode="email"
+                      name="username"
+                      type="text"
+                      placeholder="your_name"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       required
                       disabled={signin.pending}
                       className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring disabled:opacity-70"
@@ -197,26 +172,22 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
                   >
                     {signin.pending ? "Signing in..." : "Sign in"}
                   </button>
-
-                  <p className="text-xs text-neutral-500">
-                    If you just created an account, verify your email first, then sign in.
-                  </p>
                 </form>
               </section>
             ) : (
               <section>
-                <form action={signUpWithEmailAndPassword} onSubmit={signup.onSubmit} className="space-y-4">
-                  {/* ✅ keep behavior consistent */}
+                <form action={signUpWithUsernameAndPassword} onSubmit={signup.onSubmit} className="space-y-4">
                   <input type="hidden" name="redirectTo" value={redirectTo} />
 
                   <label className="block">
-                    <span className="text-sm font-medium">Email</span>
+                    <span className="text-sm font-medium">Username</span>
                     <input
-                      name="email"
-                      type="email"
-                      placeholder="name@basischina.com"
-                      autoComplete="email"
-                      inputMode="email"
+                      name="username"
+                      type="text"
+                      placeholder="your_name"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       required
                       disabled={signup.pending}
                       className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring disabled:opacity-70"
@@ -259,16 +230,10 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
                   >
                     {signup.pending ? "Creating..." : "Create account"}
                   </button>
-
-                  <p className="text-xs text-neutral-500">
-                    After verifying your email, come back and sign in to post reviews.
-                  </p>
                 </form>
               </section>
             )}
           </div>
-
-          <p className="mt-6 text-xs text-neutral-500">Your ratings are always anonymous.</p>
         </div>
       </div>
     </main>
